@@ -63,7 +63,6 @@ select { max-width: 100%; padding-inline: 9px 3px; font-size: .84rem; font-weigh
 .field-help { color: var(--muted); margin-top: 7px; font-size: .79rem; line-height: 1.45; }
 .mode-help { margin: 0 0 12px; }
 .paired, .vat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 13px; }
-.vat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .vat-grid .money-field span { right: 8px; }
 .vat-grid .money-field input { padding-right: 21px; padding-left: 8px; }
 .field-details { border-top: 1px solid #e3e8e7; padding-top: 6px; margin-top: 13px; }
@@ -196,6 +195,14 @@ details[open] .details-icon { transform: rotate(45deg); }
 .check-field { display: flex; align-items: baseline; gap: 7px; margin-top: 12px; font-size: .83rem; font-weight: 650; }
 .check-field input { width: 15px; height: 15px; accent-color: var(--teal); transform: translateY(2px); }
 .buying-description { margin-block: 9px 14px; }
+.shop-purchases { margin-top: 14px; padding: clamp(12px, 3vw, 16px); border: 1px solid #c4dad0; border-radius: 12px; background: #edf6f0; }
+.shop-purchases h3, .other-purchases-heading { margin: 0; font-size: 1rem; }
+.shop-purchases h3 { color: var(--teal); }
+.shop-purchases h3 + p { margin-top: 4px; color: var(--muted); font-size: .85rem; }
+.shop-purchases-standard { margin-top: 13px; }
+.shop-purchases-standard input { font-size: 1.12rem; }
+.shop-purchases .field-details { border-color: #d5e3db; }
+.other-purchases-heading { margin-top: 17px; }
 .secondary-button { min-height: 42px; padding: 8px 12px; background: #fff; color: var(--teal); border: 1px solid #c8d9d3; border-radius: 8px; font-size: .83rem; font-weight: 730; }
 .secondary-button:hover:enabled { background: #e9f3ed; border-color: #a4c1b7; }
 .secondary-button:disabled { cursor: default; color: #626f6c; border-color: #d8e2df; background: #f2f5f3; }

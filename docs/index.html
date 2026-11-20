@@ -19,7 +19,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#f5f5ef">
   <title>Kur keliauja tavo mokesčiai?</title>
-  <link rel="stylesheet" href="./styles.css?v=annual-income-20261120">
+  <link rel="stylesheet" href="./styles.css?v=shopping-20261120">
   <script src="./tax-model.js?v=wage-equivalent-20261120" defer></script>
   <script src="./spending-data.js" defer></script>
   <script src="./insurance-spending.js" defer></script>
@@ -221,33 +221,37 @@
         <section class="input-card buying-card paper" id="pirkiniai" aria-labelledby="buying-heading">
           <div class="section-kicker">2025 m. pirkiniai</div>
           <h2 id="buying-heading">PVM ir akcizai</h2>
-          <p class="field-help buying-description">Įvesk vidutines 2025 m. mėnesio išlaidas arba prekių kiekį per mėnesį. Jei sąskaitos kito, naudok visų metų mėnesio vidurkį.</p>
-          <div id="purchase-list"></div>
-          <button id="add-purchase" class="secondary-button add-purchase" type="button"><span aria-hidden="true">+</span> Pridėti prekę ar paslaugą</button>
-
-          <details class="field-details">
-            <summary><span class="details-icon" aria-hidden="true">+</span> Kiti pirkiniai</summary>
-            <p class="field-help" id="vat-help">Įvesk, kiek per mėnesį vidutiniškai išleisdavai kitiems pirkiniams su PVM. Išlaidas sugrupuok pagal čekyje nurodytą PVM tarifą. Šios sumos neturėtų apimti atskirai įvestų pirkinių ir taros užstato.</p>
-            <div class="vat-grid">
-              <div class="field">
-                <label for="vat-standard">21 % · per mėnesį</label>
-                <div class="money-field"><input id="vat-standard" inputmode="decimal" autocomplete="off" placeholder="Pvz., 200" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
-              </div>
-              <div class="field">
-                <label for="vat-9">9 % · per mėnesį</label>
-                <div class="money-field"><input id="vat-9" inputmode="decimal" autocomplete="off" placeholder="Pvz., 90" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
-              </div>
-              <div class="field">
-                <label for="vat-5">5 % · per mėnesį</label>
-                <div class="money-field"><input id="vat-5" inputmode="decimal" autocomplete="off" placeholder="Pvz., 45" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
-              </div>
+          <section class="shop-purchases" aria-labelledby="shop-purchases-heading">
+            <h3 id="shop-purchases-heading">Įprasti pirkiniai parduotuvėse</h3>
+            <p>Maistas, drabužiai, higienos ir buities prekės.</p>
+            <div class="field shop-purchases-standard">
+              <label for="vat-standard">Mėnesio išlaidos su 21 % PVM</label>
+              <div class="money-field"><input id="vat-standard" inputmode="decimal" autocomplete="off" placeholder="Pvz., 200" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
             </div>
+            <p class="field-help" id="vat-help">Įvesk 2025 m. mėnesio išlaidų vidurkį su PVM pagal čekyje nurodytą tarifą. Kiekvieną pirkinį įtrauk vieną kartą. Taros užstatą atimk iš sumos.</p>
+            <details class="field-details">
+              <summary><span class="details-icon" aria-hidden="true">+</span> Pirkiniai su 9 % arba 5 % PVM</summary>
+              <div class="vat-grid">
+                <div class="field">
+                  <label for="vat-9">9 % · per mėnesį</label>
+                  <div class="money-field"><input id="vat-9" inputmode="decimal" autocomplete="off" placeholder="Pvz., 90" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
+                </div>
+                <div class="field">
+                  <label for="vat-5">5 % · per mėnesį</label>
+                  <div class="money-field"><input id="vat-5" inputmode="decimal" autocomplete="off" placeholder="Pvz., 45" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
+                </div>
+              </div>
+            </details>
             <details class="field-details">
               <summary><span class="details-icon" aria-hidden="true">+</span> Įvesti atskiras prekes</summary>
               <div id="other-purchase-list"></div>
               <button id="add-other-purchase" class="secondary-button add-purchase" type="button">Pridėti atskirą prekę</button>
             </details>
-          </details>
+          </section>
+          <h3 class="other-purchases-heading">Akcizinės prekės ir paslaugos</h3>
+          <p class="field-help buying-description">Įvesk vidutines 2025 m. mėnesio išlaidas arba prekių kiekį per mėnesį.</p>
+          <div id="purchase-list"></div>
+          <button id="add-purchase" class="secondary-button add-purchase" type="button"><span aria-hidden="true">+</span> Pridėti prekę ar paslaugą</button>
         </section>
 
         <div class="compute-actions">
