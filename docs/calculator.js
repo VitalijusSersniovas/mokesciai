@@ -20,17 +20,9 @@ const vatFields = [
 ];
 
 let showFundShares = false;
-let wageEntryBasis = "gross";
-const wageInputs = { gross: wageInput.value, net: "" };
-let result = {
-  ...wageTaxes(24000),
-  gross: toCents(24000),
-  mode: "wages",
-  caption: taxYear + " m. pavyzdys · 2 000 € ant popieriaus per mėnesį",
-  example: true,
-  vat: 0,
-  purchases: [],
-};
+let wageEntryBasis = wageBasis.value;
+const wageInputs = { gross: "", net: "" };
+wageInputs[wageEntryBasis] = wageInput.value;
 
 class InvalidField extends Error {}
 
@@ -192,6 +184,16 @@ function readIncome() {
       return { tax: 0, vsd: 0, psd: 0, caption: "Tik pirkinių mokesčiai" };
   }
 }
+
+const exampleIncome = readIncome();
+let result = {
+  ...exampleIncome,
+  mode: incomeMode.value,
+  caption: taxYear + " m. pavyzdys · " + compactMoney(exampleIncome.enteredNet / 12) + " į rankas per mėnesį",
+  example: true,
+  vat: 0,
+  purchases: [],
+};
 
 function annualLines() {
   const lines = [];

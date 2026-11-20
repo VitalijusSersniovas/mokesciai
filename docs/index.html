@@ -29,7 +29,7 @@
   <script src="./share-card.js?v=macbook-20261120" defer></script>
   <script src="./sharing.js" defer></script>
   <script src="./defence-fund.js" defer></script>
-  <script src="./calculator.js?v=purchase-totals-20261120" defer></script>
+  <script src="./calculator.js?v=net-default-20261120" defer></script>
 </head>
 <body>
   <a class="skip" href="#skaiciuokle">Pereiti prie skaičiuoklės</a>
@@ -103,16 +103,16 @@
             <div class="field wage-basis-field">
               <label for="wage-basis">Kokią atlyginimo sumą žinai?</label>
               <select id="wage-basis">
+                <option value="net" selected>Į rankas</option>
                 <option value="gross">Ant popieriaus</option>
-                <option value="net">Į rankas</option>
               </select>
             </div>
             <div class="field">
-              <label for="wages" id="wages-label">Atlyginimas ant popieriaus per mėnesį</label>
-              <div class="money-field"><input id="wages" inputmode="decimal" autocomplete="off" value="2000" aria-describedby="wage-help"><span aria-hidden="true">€</span></div>
-              <p class="field-help" id="wage-help">Įvesk 2025 m. mėnesio vidurkį su premijomis.</p>
+              <label for="wages" id="wages-label">Atlyginimas į rankas per mėnesį</label>
+              <div class="money-field"><input id="wages" inputmode="decimal" autocomplete="off" value="1200" aria-describedby="wage-help"><span aria-hidden="true">€</span></div>
+              <p class="field-help" id="wage-help">Įvesk 2025 m. mėnesio vidurkį. Kintant atlyginimui ar turint kitų pajamų, įvertis gali skirtis nuo algalapio.</p>
             </div>
-            <div class="field block-field" id="wage-npd-field" hidden>
+            <div class="field block-field" id="wage-npd-field">
               <label for="wage-npd">Ar darbdavys taikė NPD?</label>
               <select id="wage-npd" aria-describedby="wage-npd-help">
                 <option value="unknown">Nežinau</option>
@@ -121,7 +121,7 @@
               </select>
               <p class="field-help" id="wage-npd-help">Jei nežinai, skaičiuojame su įprastai taikomu metiniu NPD. Jei NPD keitėsi, tikslesniam įverčiui naudok algalapyje nurodytą sumą ant popieriaus.</p>
             </div>
-            <label class="check-field" id="wage-pension-field" hidden><input type="checkbox" id="wage-pension"> Nuo atlyginimo buvo išskaičiuojama 3 % įmoka į II pensijų pakopą</label>
+            <label class="check-field" id="wage-pension-field"><input type="checkbox" id="wage-pension"> Nuo atlyginimo buvo išskaičiuojama 3 % įmoka į II pensijų pakopą</label>
             <details class="field-details">
               <summary><span class="details-icon" aria-hidden="true">+</span> Šeima ir negalia</summary>
               <p class="field-help">Vien santuoka ar vaikų skaičius 2025 m. metinio NPD nekeičia. Dėl negalios gali būti taikomas didesnis NPD.</p>
@@ -268,7 +268,7 @@
             <span class="result-period-label">Metai</span>
           </div>
           <div class="total-amount" id="total-amount">—</div>
-          <div class="total-note"><span class="total-dot" aria-hidden="true"></span><span id="result-caption">2025 m. pavyzdys · 2 000 € ant popieriaus per mėnesį</span></div>
+          <div class="total-note"><span class="total-dot" aria-hidden="true"></span><span id="result-caption"></span></div>
         </div>
         <div class="breakdown paper">
           <p class="result-message stale-message" id="stale-result" hidden>Duomenys pakeisti. Rodomas paskutinis skaičiavimas.</p>
