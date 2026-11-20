@@ -112,7 +112,7 @@ test('purchase examples match the product and are not submitted as values', () =
   const beer = purchaseForm('beer');
   assert.equal(beer.field('quantity').placeholder, 'Pvz., 9');
   assert.equal(beer.field('strength').placeholder, 'Pvz., 5');
-  assert.equal(beer.field('known-price').placeholder, 'Pvz., 26');
+  assert.equal(beer.field('known-price').placeholder, 'Pvz., 27,36');
   assert.equal(purchaseForm('spirits').field('strength').placeholder, 'Pvz., 40');
   assert.equal(purchaseForm('cigarettes').field('quantity').placeholder, 'Pvz., 2');
 });
@@ -142,6 +142,47 @@ test('fuel reference examples follow each monthly input without replacing refine
   diesel.fill('quantity', 20);
   assert.equal(diesel.field('known-price').placeholder, 'Pvz., 30,14');
   assert.equal(diesel.field('known-price').value, '');
+});
+
+test('retail price examples update with quantity and year without supplying checkout prices', () => {
+  const beer = purchaseForm('beer', 2026);
+  assert.match(beer.field('price-example-amount').textContent, /Pavyzdinė kaina už 9 l · 28,62\s€ per mėnesį/);
+  assert.match(beer.field('price-example-source').textContent, /Numbeo.*2026-11-19/);
+  beer.fill('quantity', 8);
+  beer.fill('strength', 5);
+  assert.match(beer.field('price-example-amount').textContent, /Apytikslė kaina už 8 l · 25,44\s€/);
+  assert.equal(beer.field('known-price').placeholder, 'Pvz., 25,44');
+  assert.equal(beer.field('known-price').value, '');
+  assert.equal(beer.result().missingPrice, true);
+  beer.fill('known-price', 35);
+  assert.equal(beer.result().price, 42000);
+  assert.equal(beer.result().vat, 7289);
+  beer.setYear(2025);
+  assert.match(beer.field('price-example-amount').textContent, /24,32\s€/);
+  assert.match(beer.field('price-example-source').textContent, /2025 m. vidurkis/);
+  assert.equal(beer.field('known-price').value, '35');
+  beer.chooseBasis('amount');
+  assert.equal(beer.field('price-example').hidden, true);
+});
+
+test('price examples disclose the package or volume assumptions and skip missing references', () => {
+  const wine = purchaseForm('wine', 2026);
+  wine.fill('quantity', 3);
+  assert.equal(wine.field('known-price').placeholder, 'Pvz., 32');
+  assert.match(wine.field('price-example-basis').textContent, /butelyje yra 0,75 l/);
+
+  const gas = purchaseForm('gas', 2026);
+  gas.chooseBasis('quantity');
+  gas.fill('quantity', 50);
+  assert.equal(gas.field('known-price').placeholder, 'Pvz., 99,53');
+  assert.match(gas.field('price-example-basis').textContent, /1,055.*0,53 kg/);
+  assert.equal(gas.result().missingPrice, true);
+
+  const heated = purchaseForm('heated', 2026);
+  assert.equal(heated.field('price-example').hidden, true);
+  heated.setYear(2025);
+  assert.equal(heated.field('price-example').hidden, false);
+  assert.equal(heated.field('known-price').placeholder, 'Pvz., 19,81');
 });
 
 test('household bills use monthly averages and apply VAT alone', () => {

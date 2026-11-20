@@ -14,6 +14,7 @@ const purchaseMonthsPerYear = 12;
     2025: {
       fuelPrices: { petrol: 1.423, diesel: 1.507 },
       fuelReference: "2025 m. LEA ir EK metinis vidurkis",
+      fuelSource: "https://www.ena.lt/uploads/2025-men-data/2025-xii-energetikos-duomenu-apzvalga-20260115.pdf#page=25",
       reducedVat: 9,
       heatingVat: 9,
       excise: {
@@ -28,6 +29,7 @@ const purchaseMonthsPerYear = 12;
       // https://www.ena.lt/Naujiena/kdk-20261120/
       fuelPrices: { petrol: 1.729, diesel: 2.171 },
       fuelReference: "LEA vidurkis (2026 m. lapkričio 20 d. iki 10 val.)",
+      fuelSource: "https://www.ena.lt/Naujiena/kdk-20261120/",
       reducedVat: 12,
       heatingVat: 21,
       // VMI 2026 m. tarifai. Dyzelinui nuo birželio 16 d. vėl taikoma 500 €/1 000 l pastovioji dalis.
@@ -40,9 +42,54 @@ const purchaseMonthsPerYear = 12;
       cigarettes: { specificPerPack: 2.01, minimumPerPack: 3.248 },
     },
   };
+  const historicalRetailSource = {
+    name: "Valstybės duomenų agentūra · 2025 m. vidurkis",
+    url: "https://osp-rs.stat.gov.lt/rest_json/data/S7R244_M2021136/?startPeriod=2025&endPeriod=2025",
+  };
+  const numbeoRetailSource = {
+    name: "„Numbeo“ Lietuvos kainų įverčiai · atnaujinta 2026-11-19",
+    url: "https://www.numbeo.com/cost-of-living/country_result.jsp?country=Lithuania",
+  };
+  const examplePrices = {
+    2025: {
+      beer: { price: 1.52, size: 0.5, unit: "l", description: "Lietuvoje pagamintas 5,2 % alus be taros užstato", source: historicalRetailSource },
+      wine: { price: 7.11, size: 0.75, unit: "l", description: "Importinis stalo vynas", source: historicalRetailSource },
+      spirits: { price: 10.63, size: 0.5, unit: "l", description: "Lietuvoje pagaminta 40 % degtinė", source: historicalRetailSource },
+      cigarettes: { price: 5.12, size: 1, unit: "pak.", description: "Cigarečių su filtru pakelis (20 vnt.)", source: historicalRetailSource },
+      heated: { price: 4.66, size: 20, unit: "vnt.", description: "Kaitinamasis tabakas", source: historicalRetailSource },
+    },
+    2026: {
+      beer: { price: 1.59, size: 0.5, unit: "l", description: "Vietinės gamybos alus parduotuvėje", source: numbeoRetailSource },
+      wine: { price: 8, size: 0.75, unit: "l", description: "Vidutinės kainos vynas. Pavyzdyje laikome, kad butelyje yra 0,75 l", source: numbeoRetailSource },
+      cigarettes: {
+        price: 5.18, size: 1, unit: "pak.", description: "Svertinė didžiausia mažmeninė kaina už 20 cigarečių",
+        source: {
+          name: "Finansų ministerija · taikoma nuo 2026-03-01",
+          url: "https://www.e-tar.lt/portal/lt/legalActPrint?documentId=aa4d6c8612d911f1a552c76556910e9c",
+        },
+      },
+    },
+  };
+
+  function getPriceExample(key, year) {
+    const { fuelPrices, fuelReference, fuelSource } = purchaseRules[year];
+    const source = { name: fuelReference, url: fuelSource };
+    if (fuelPrices[key]) {
+      return { price: fuelPrices[key], size: 1, unit: "l", source };
+    }
+    if (key === "gas" && year === 2026) {
+      return {
+        price: 1.055, size: 0.53, unit: "kg", source,
+        description: "Pagal VDA perskaičiavimo koeficientą 1 l sveria apie " + exampleNumber.format(0.53) + " kg",
+      };
+    }
+    return examplePrices[year]?.[key];
+  }
+
   const fuelPriceFormat = new Intl.NumberFormat("lt-LT", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   const quantityFormat = new Intl.NumberFormat("lt-LT", { maximumFractionDigits: 1 });
   const amountFormat = new Intl.NumberFormat("lt-LT", { maximumFractionDigits: 2 });
+  const exampleNumber = new Intl.NumberFormat("lt-LT", { maximumFractionDigits: 6 });
   const formatFuelQuantity = (quantity) => (quantity < 0.1 ? amountFormat : quantityFormat).format(quantity);
 
   const products = {
@@ -271,6 +318,12 @@ const purchaseMonthsPerYear = 12;
       price.input.setAttribute("aria-describedby", priceGuide.id + " " + priceWarning.id);
       const help = create("p", { className: "field-help", id: id + "-help" });
       const estimateGuide = create("p", { className: "field-help", id: id + "-estimate-guide" });
+      const priceExample = create("p", { className: "purchase-price-example", id: id + "-price-example", hidden: true });
+      const priceExampleAmount = create("strong", { id: id + "-price-example-amount" });
+      priceExampleAmount.setAttribute("aria-live", "polite");
+      const priceExampleBasis = create("span", { id: id + "-price-example-basis" });
+      const priceExampleSource = create("a", { id: id + "-price-example-source" });
+      priceExample.append(priceExampleAmount, priceExampleBasis, priceExampleSource);
       const strength = makeInput(id + "-strength", "Stiprumas (%)");
       const maxRetail = makeInput(id + "-max-retail", "Didžiausia kaina, nurodyta ant pakelio", { currency: true, example: "6" });
       const refine = create("details", { className: "field-details purchase-refine" });
@@ -303,19 +356,38 @@ const purchaseMonthsPerYear = 12;
         const key = product.input.value;
         const examples = purchaseExamples[key];
         if (!examples) return;
-        const pricePerLitre = getRules().fuelPrices[key];
+        const year = getYear();
+        const fuelPrice = purchaseRules[year].fuelPrices[key];
+        const benchmark = getPriceExample(key, year);
         quantity.input.placeholder = "Pvz., " + examples.quantity;
         price.input.placeholder = "Pvz., " + examples.spending;
         quantityRefinement.input.placeholder = quantity.input.placeholder;
         priceRefinement.input.placeholder = price.input.placeholder;
-        if (!pricePerLitre) return;
+        if (fuelPrice) {
+          const enteredSpending = parseInputNumber(price.input.value);
+          const spending = enteredSpending >= 0.01 && enteredSpending <= 100_000_000 ? enteredSpending : Number(examples.spending);
+          quantityRefinement.input.placeholder = "Pvz., " + formatFuelQuantity(spending / fuelPrice);
+        }
 
-        const enteredSpending = parseInputNumber(price.input.value);
-        const enteredLitres = parseInputNumber(quantity.input.value);
-        const spending = enteredSpending >= 0.01 && enteredSpending <= 100_000_000 ? enteredSpending : Number(examples.spending);
-        const litres = enteredLitres >= 0.01 && enteredLitres <= 100_000_000 ? enteredLitres : Number(examples.quantity);
-        quantityRefinement.input.placeholder = "Pvz., " + formatFuelQuantity(spending / pricePerLitre);
-        priceRefinement.input.placeholder = "Pvz., " + amountFormat.format(litres * pricePerLitre);
+        priceExample.hidden = !benchmark || basis.input.value !== "quantity";
+        if (priceExample.hidden) return;
+        const enteredQuantity = parseInputNumber(quantity.input.value);
+        const validQuantity = enteredQuantity >= 0.01 && enteredQuantity <= 100_000_000;
+        const exampleQuantity = validQuantity ? enteredQuantity : Number(examples.quantity);
+        const subtotal = toCents(exampleQuantity / benchmark.size * benchmark.price);
+        priceRefinement.input.placeholder = "Pvz., " + amountFormat.format(subtotal / 100);
+        priceExampleAmount.textContent = (validQuantity ? "Apytikslė kaina" : "Pavyzdinė kaina")
+          + " už " + exampleNumber.format(exampleQuantity) + " " + benchmark.unit + " · " + money(subtotal) + " per mėnesį";
+        if (key === "gas") {
+          priceExampleBasis.textContent = fuelPriceFormat.format(benchmark.price) + " € / l. " + benchmark.description + ". ";
+        } else {
+          const size = benchmark.size === 1 ? "" : exampleNumber.format(benchmark.size) + " ";
+          const price = fuelPrice ? fuelPriceFormat.format(benchmark.price) + " €" : money(toCents(benchmark.price));
+          priceExampleBasis.textContent = (benchmark.description ? benchmark.description + " · " : "")
+            + price + " / " + size + benchmark.unit + ". ";
+        }
+        priceExampleSource.textContent = benchmark.source.name;
+        priceExampleSource.href = benchmark.source.url;
       }
 
       function updateFields() {
@@ -325,7 +397,7 @@ const purchaseMonthsPerYear = 12;
         fields.hidden = !key;
         if (!key || service) {
           fields.replaceChildren();
-          priceGuide.hidden = estimateGuide.hidden = refine.hidden = true;
+          priceGuide.hidden = estimateGuide.hidden = priceExample.hidden = refine.hidden = true;
           help.hidden = !service;
           help.textContent = "";
           if (service) {
@@ -347,7 +419,7 @@ const purchaseMonthsPerYear = 12;
         quantity.label.textContent = selected.unit + " per mėnesį";
         quantityRefinement.label.textContent = quantity.label.textContent;
         updatePurchaseExamples();
-        quantity.input.setAttribute("aria-describedby", help.id);
+        quantity.input.setAttribute("aria-describedby", priceExample.hidden ? help.id : help.id + " " + priceExample.id);
         quantityRefinement.input.setAttribute("aria-describedby", help.id);
         quantity.input.required = true;
         price.input.required = true;
@@ -359,10 +431,15 @@ const purchaseMonthsPerYear = 12;
         help.textContent = productHelp[key] ?? "";
         help.hidden = !help.textContent;
         const pricePerLitre = rules.fuelPrices[key];
-        estimateGuide.textContent = pricePerLitre
-          ? (byAmount ? "Kiekį įvertinsime pagal vidutinę degalų kainą. " : "Išlaidas PVM įverčiui įvertinsime pagal vidutinę degalų kainą. ")
-            + rules.fuelReference + " · " + fuelPriceFormat.format(pricePerLitre) + " €/l."
-          : (byAmount && !vatOnly ? "Akcizui patikslinti įrašyk kiekį žemiau." : !byAmount ? "PVM apskaičiuosime, jei pridėsi kainą." : "");
+        if (byAmount) {
+          estimateGuide.textContent = pricePerLitre
+            ? "Kiekį įvertinsime pagal vidutinę degalų kainą. " + rules.fuelReference + " · " + fuelPriceFormat.format(pricePerLitre) + " €/l."
+            : vatOnly ? "" : "Akcizui patikslinti įrašyk kiekį žemiau.";
+        } else {
+          estimateGuide.textContent = pricePerLitre
+            ? "Jei išlaidų neįvesi, PVM įvertinsime pagal šią kainą."
+            : "PVM apskaičiuosime, jei įrašysi savo išlaidas.";
+        }
         estimateGuide.hidden = !estimateGuide.textContent;
 
         fields.replaceChildren(basis.wrapper, byAmount ? price.wrapper : quantity.wrapper);
@@ -467,7 +544,7 @@ const purchaseMonthsPerYear = 12;
         (next?.focus ?? addButton).focus();
         notify();
       });
-      row.append(header, fields, priceGuide, help, estimateGuide, refine, priceWarning);
+      row.append(header, fields, priceGuide, priceExample, help, estimateGuide, refine, priceWarning);
       rows.push(entry);
       listElement.append(row);
       entry.focus.focus();

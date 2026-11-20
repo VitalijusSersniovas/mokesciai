@@ -218,6 +218,8 @@ details[open] .details-icon { transform: rotate(45deg); }
 .purchase-refine summary { min-height: 32px; }
 .purchase-refine .purchase-fields { margin-top: 5px; }
 .purchase-row .field label { font-size: .78rem; }
+.purchase-price-example { margin-top: 9px; padding: 8px 10px; border-radius: 7px; background: #e8f2ec; color: var(--muted); font-size: .76rem; line-height: 1.45; }
+.purchase-price-example strong { display: block; margin-bottom: 2px; color: var(--teal); font-size: .83rem; }
 .remove-purchase { min-height: 46px; background: transparent; border: 0; border-radius: 6px; color: #88404a; padding-inline: 5px; font-size: .77rem; text-decoration: underline; text-underline-offset: 3px; }
 .remove-purchase:hover { background: #f6e9e9; }
 .tax-year-choice { padding-inline: 4px; }
