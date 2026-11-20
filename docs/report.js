@@ -170,40 +170,24 @@
     if (!purchases?.length) return "";
     return `<section aria-labelledby="tax-report-purchases-heading">
       <h2 id="tax-report-purchases-heading">Metinės sumos pagal prekę ar paslaugą</h2>
-      <p>Mėnesio kiekius ir išlaidas padauginome iš 12.</p>
+      <p>Mėnesio kiekius ir išlaidas padauginome iš 12. Kaina be mokesčių gauta atėmus apskaičiuotą PVM ir taikomą akcizą.</p>
       <ul class="tax-report-purchases" role="list">
         ${purchases.map((item) => `<li>
           <h3>${escapeHtml(item.name)}</h3>
-          <p class="tax-report-purchase-net">${escapeHtml(item.netLabel ?? "Be PVM ir akcizo")} ${item.net ? `<strong>${escapeHtml(item.net)}</strong>` : "· neapskaičiuota"}</p>
-          <p>${escapeHtml(item.detail)}</p>
+          <dl class="tax-report-purchase-amounts">
+            ${item.amounts.map(([label, amount]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(amount)}</dd></div>`).join("")}
+          </dl>
+          <p>${escapeHtml(item.taxes)}</p>
           ${item.note ? `<p>${escapeHtml(item.note)}</p>` : ""}
         </li>`).join("")}
       </ul>
     </section>`;
   }
 
-  const minimumNeedsLabel = "Minimalių vartojimo poreikių dydis vienam žmogui";
-  const personalComparisonLabel = "Palyginimas pagal tavo sąskaitas";
-
   function comparisonBasis(data) {
     const date = data.comparison?.priceChecked;
     const basis = `Kiekvienam palyginimui naudojama visa ${data.year} m. mokesčių ir įmokų suma bei kortelėje nurodyta kaina su mokesčiais.`;
     return date ? `${basis} Paskutinė kainos šaltinio patikra ${date}.` : basis;
-  }
-
-  function comparisonExtras(comparison) {
-    const { mvpd, personal } = comparison;
-    return `${mvpd ? `<div class="tax-report-comparison-extra">
-      <h3>${minimumNeedsLabel}</h3>
-      <p>Metinė suma atitinka <strong>${escapeHtml(mvpd.quantity)}</strong> pagal ${escapeHtml(mvpd.price)} rodiklį. Jis apima minimalius maisto ir kitus vartojimo poreikius.</p>
-      <p>${sourceLink(mvpd)}</p>
-    </div>` : ""}${personal?.length ? `<div class="tax-report-comparison-extra">
-      <h3>${personalComparisonLabel}</h3>
-      <table>
-        <thead><tr><th scope="col">Paslauga</th><th scope="col">Mėnesio išlaidos</th><th scope="col">Suma atitinka</th></tr></thead>
-        <tbody>${personal.map((item) => `<tr><th scope="row">${escapeHtml(item.label)}</th><td>${escapeHtml(item.price)}</td><td>${escapeHtml(item.quantity)}</td></tr>`).join("")}</tbody>
-      </table>
-    </div>` : ""}`;
   }
 
   function reportContent(data, photos, expandedSpending = false) {
@@ -215,7 +199,6 @@
            <ul class="tax-report-products" role="list">${data.comparison.items.map((item) => comparisonCard(item, photos)).join("")}</ul>
            <p class="tax-report-picture-credit">${photos && photos.size < requestedPhotoIndices(data).length ? "Dalies iliustracijų nepavyko įkelti." : "Prekių ir paslaugų vaizdai iliustraciniai, sukurti DI."}</p>
            <p class="tax-report-picture-credit">${escapeHtml(data.comparison.basis)} · <strong>${escapeHtml(data.comparison.total)}</strong></p>
-           ${comparisonExtras(data.comparison)}
          </section>`
       : "";
     const notesSection = data.notes.length
@@ -271,8 +254,12 @@
     .tax-report-purchases li { margin: 0; padding-block: 9px; border-bottom: 1px solid #dce3e1; break-inside: avoid; }
     .tax-report-purchases h3 { margin: 0 0 4px; font-size: .95rem; }
     .tax-report-purchases p { font-size: .85rem; }
-    .tax-report-purchases .tax-report-purchase-net { display: inline-block; margin-bottom: 4px; padding: 3px 8px; border-radius: 6px; color: #0b5b50; background: #e5f2eb; }
-    .tax-report-purchase-net strong { margin-inline-start: 4px; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+    .tax-report-purchase-amounts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 5px 0; }
+    .tax-report-purchase-amounts > div { display: grid; align-content: space-between; gap: 3px; min-width: 0; padding: 6px 9px; border: 1px solid #dce7e2; border-radius: 7px; background: #f6f8f5; }
+    .tax-report-purchase-amounts > div + div { border-color: #cfe2d7; background: #eaf4ee; }
+    .tax-report-purchase-amounts dt { color: #435467; font-size: .78rem; }
+    .tax-report-purchase-amounts dd { margin: 0; font-size: 1.05rem; font-weight: 750; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .tax-report-purchase-amounts > div + div dd { color: #0b5b50; }
     .tax-report-document .tax-report-products {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -303,9 +290,6 @@
     .tax-report-product .tax-report-unit-price { color: #274840; font-weight: 700; }
     .tax-report-product .tax-report-source, .tax-report-document .tax-report-picture-credit { color: #435467; font-size: .68rem; }
     .tax-report-document .tax-report-picture-credit { margin-top: 5px; }
-    .tax-report-comparison-extra { margin-top: 10px; padding: 8px 10px; border: 1px solid #d5e2d9; border-radius: 8px; }
-    .tax-report-comparison-extra h3 { margin: 0 0 4px; font-size: .95rem; }
-    .tax-report-comparison-extra p { font-size: .82rem; }
     .tax-report-spending-details { margin-block: 16px 10px; }
     .tax-report-document .tax-report-spending-details > p { margin-block: 4px 8px; font-size: .82rem; }
     .tax-report-spending-group { padding-inline: 9px; background: #f8faf7; border: 1px solid #d5e2d9; border-radius: 8px; }
@@ -405,21 +389,14 @@
       const context = [item.price, item.source, item.date, item.sourceKind].filter(Boolean).join(", ");
       return `${item.label} · ${item.quantity} (${context})` + (url ? "\n" + url.href : "");
     });
-    const mvpd = comparison?.mvpd;
     return [
       [brand, `${data.year} m. mokesčių ataskaita`, data.mode].join("\n"),
       caveat ? "Skaičiavimo pastaba. " + caveat : "",
       comparisons.length ? paragraph("Perkamosios galios palyginimas", [comparisonBasis(data), `${comparison.basis} · ${comparison.total}`, ...comparisons]) : "",
-      mvpd ? paragraph(minimumNeedsLabel, [
-        `Metinė suma atitinka ${mvpd.quantity} pagal ${mvpd.price} rodiklį.`,
-        mvpd.source,
-        safeHttpsUrl(mvpd.url)?.href,
-      ].filter(Boolean)) : "",
-      paragraph(personalComparisonLabel, (comparison?.personal ?? []).map((item) => `${item.label} · ${item.price} · ${item.quantity}`)),
       `Metiniai mokesčiai ir įmokos · ${data.total}`,
       paragraph("Mokesčiai ir draudimo įmokos", data.rows.map(([label, amount]) => `${label} · ${amount}`)),
       paragraph("Metinės sumos pagal prekę ar paslaugą", (data.purchases ?? []).map((item) => [
-        item.name, (item.netLabel ?? "Be PVM ir akcizo") + " · " + (item.net || "neapskaičiuota"), item.detail, item.note,
+        item.name, ...item.amounts.map(([label, amount]) => label + " · " + amount), item.taxes, item.note,
       ].filter(Boolean).join("\n"))),
       spendingDetails.length ? paragraph("Išlaidų papunkčiai", [
         spendingBasis(data.spendingYear),

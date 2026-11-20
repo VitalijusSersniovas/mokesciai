@@ -119,7 +119,6 @@ const purchaseMonthsPerYear = 12;
       name: key === "intermediate" && extra !== null
         ? product.label + " · " + extra.toLocaleString("lt-LT", { maximumFractionDigits: 15 }) + " %"
         : product.label,
-      productKey: key,
       excise: exciseCents,
       vat: vatCents,
       price: priceCents,

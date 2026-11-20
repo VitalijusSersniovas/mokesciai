@@ -231,10 +231,14 @@ details[open] .details-icon { transform: rotate(45deg); }
 .breakdown dl > div { padding-block: 9px; }
 .purchase-summary { padding-block: 7px; border-top: 1px solid #dce3e1; }
 #purchase-results { margin: 0; padding: 0; list-style: none; }
-#purchase-results li { display: grid; justify-items: start; gap: 5px; padding-block: 9px; border-bottom: 1px solid #e5eae8; font-size: .85rem; }
+#purchase-results li { display: grid; gap: 6px; padding-block: 10px; border-bottom: 1px solid #e5eae8; font-size: .85rem; }
 #purchase-results li > span, #purchase-results li small { color: var(--muted); font-size: .78rem; }
-.purchase-net { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding: 4px 8px; border-radius: 6px; color: #0b5b50; background: #e5f2eb; }
-.purchase-net strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+#purchase-results .purchase-amounts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+#purchase-results .purchase-amounts > div { display: grid; align-content: space-between; gap: 4px; min-width: 0; padding: 7px 9px; border: 1px solid #dce7e2; border-radius: 7px; background: #f6f8f5; }
+#purchase-results .purchase-amounts > div + div { border-color: #cfe2d7; background: #eaf4ee; }
+#purchase-results .purchase-amounts dt { color: var(--muted); font-size: .77rem; }
+#purchase-results .purchase-amounts dd { font-size: 1rem; overflow-wrap: anywhere; }
+#purchase-results .purchase-amounts > div + div dd { color: var(--teal); }
 .report-actions { margin-top: 12px; border-radius: 14px; padding: 13px 16px; }
 .report-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 input:focus-visible, select:focus-visible { z-index: 1; }
@@ -284,6 +288,13 @@ input:focus-visible, select:focus-visible { z-index: 1; }
 .custom-fields { display: grid; grid-template-columns: minmax(85px, 170px) minmax(90px, 145px) minmax(60px, 1fr); align-items: end; gap: 8px; }
 .custom-fields output { min-height: 46px; display: grid; align-items: center; padding: 6px 10px; border-radius: 8px; color: #0b5b50; background: #e3efe7; font-weight: 750; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .comparison-source-note { color: #4d655c; font-size: .73rem; margin-top: 12px; }
+.institution-budget-grid { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; margin: 16px 0 0; padding: 0; }
+.institution-budget { min-width: 0; display: grid; grid-template-rows: 1fr auto auto auto auto; gap: 4px; padding: 14px; border: 1px solid #dae6de; border-radius: 10px; background: #fff; }
+.institution-budget h3 { color: #1a3636; font-size: 1rem; line-height: 1.3; }
+.institution-budget-annual { color: #0a6557; font-variant-numeric: tabular-nums; }
+.institution-budget-annual strong { font-size: 1.45rem; font-weight: 760; }
+.institution-budget-monthly, .institution-budget-total, .institution-budget a { font-size: .8rem; }
+.institution-budget-total { color: #455d56; }
 @media (max-width: 860px) {
   .comparison { padding: 19px; }
   .price-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -357,13 +368,6 @@ input:focus-visible, select:focus-visible { z-index: 1; }
 .price-photo[data-tile="1"] { background-position: right top; }
 .price-photo[data-tile="2"] { background-position: left bottom; }
 .price-photo[data-tile="3"] { background-position: right bottom; }
-.mvpd-comparison { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px; margin-top: 13px; padding: 12px 14px; background: #e4efe7; border: 1px solid #d0e1d5; border-radius: 10px; }
-.mvpd-comparison h3 { font-size: .94rem; }
-.mvpd-comparison p, .mvpd-comparison a, .personal-comparisons small { color: #435e54; font-size: .79rem; }
-.mvpd-comparison strong, .personal-comparisons strong { color: #0b5b50; font-size: 1.13rem; font-variant-numeric: tabular-nums; }
-.personal-comparisons { list-style: none; margin: 8px 0 0; padding: 0; }
-.personal-comparisons li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 8px 0; border-bottom: 1px solid #d5e4da; }
-.personal-comparisons small { grid-column: 1 / -1; }
 .report-main-button { color: white; background: var(--teal); border-color: var(--teal); }
 .report-main-button:hover:enabled { color: white; background: #084b43; border-color: #084b43; }
 @media (max-width: 900px) {

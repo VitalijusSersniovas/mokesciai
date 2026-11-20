@@ -267,7 +267,8 @@ function purchaseTaxSummary(item) {
 
 function purchaseResultRow(item) {
   const estimated = item.estimatedTax || item.estimatedCigarette;
-  const paid = item.price === null ? "" : "Su mokesčiais " + (item.estimatedTax === "vat" ? "≈ " : "") + money(item.price);
+  const gross = item.price === null ? "Kaina neįvesta" : (item.estimatedTax === "vat" ? "≈ " : "") + money(item.price);
+  const net = item.netPrice === null ? "Neapskaičiuota" : (estimated ? "≈ " : "") + money(item.netPrice);
   let missing = "";
   if (item.netPrice === null) {
     if (item.price === null) missing = "Įvesk pirkimo kainą.";
@@ -277,9 +278,11 @@ function purchaseResultRow(item) {
   }
   return {
     name: item.name,
-    detail: [paid, purchaseTaxSummary(item)].filter(Boolean).join(" · "),
-    netLabel: item.vatOnly ? "Be PVM" : "Be PVM ir akcizo",
-    net: item.netPrice === null ? "" : (estimated ? "≈ " : "") + money(item.netPrice),
+    amounts: [
+      ["Iš viso per metus su mokesčiais", gross],
+      [item.vatOnly ? "Per metus be PVM" : "Per metus be PVM ir akcizo", net],
+    ],
+    taxes: purchaseTaxSummary(item),
     note: missing || item.estimate,
   };
 }
@@ -292,16 +295,20 @@ function renderPurchaseSummary(caveats) {
     const itemRow = document.createElement("li");
     const name = document.createElement("strong");
     name.textContent = item.name;
-    const detail = document.createElement("span");
-    detail.textContent = item.detail;
-    const net = document.createElement("div");
-    net.className = "purchase-net";
-    const label = document.createElement("span");
-    label.textContent = item.netLabel;
-    const value = document.createElement(item.net ? "strong" : "span");
-    value.textContent = item.net || "Neapskaičiuota";
-    net.append(label, value);
-    itemRow.append(name, net, detail);
+    const amounts = document.createElement("dl");
+    amounts.className = "purchase-amounts";
+    for (const [label, amount] of item.amounts) {
+      const group = document.createElement("div");
+      const term = document.createElement("dt");
+      term.textContent = label;
+      const value = document.createElement("dd");
+      value.textContent = amount;
+      group.append(term, value);
+      amounts.append(group);
+    }
+    const taxes = document.createElement("span");
+    taxes.textContent = item.taxes;
+    itemRow.append(name, amounts, taxes);
     if (item.note) {
       const note = document.createElement("small");
       note.textContent = item.note;
@@ -594,7 +601,7 @@ function renderResult(announce = false) {
   comparisonCaveats.textContent = caveats;
   comparisonCaveats.hidden = !caveats;
 
-  priceComparison.update({ total, example: !!result.example, purchases: result.purchases }, announce);
+  priceComparison.update({ total, example: !!result.example }, announce);
   renderSpending(total, caveats);
   renderIncomeBreakdown({ total, gpm, vsd, psd });
   renderSpendingStatus();
@@ -617,7 +624,7 @@ function reportData(includePurchases) {
     example: !!result.example,
     mode: result.caption,
     total: money(total),
-    comparison: includePurchases ? priceComparison.reportRows(total, { includePersonal: true }) : null,
+    comparison: includePurchases ? priceComparison.reportRows(total) : null,
     purchases: includePurchases ? result.purchases.map(purchaseResultRow) : [],
     rows: lines.map((line) => [line.label, money(line.cents)]),
     spendingYear,

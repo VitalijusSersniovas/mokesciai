@@ -5,8 +5,8 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const read = (name) => fs.readFileSync(path.join(__dirname, '..', 'docs', name), 'utf8');
-const { comparePrice, formatUnitPrice, referencePrices, householdBillComparisons, mvpdBenchmark } = vm.runInNewContext(
-  read('tax-model.js') + '\n' + read('comparison.js') + '\n({ comparePrice, formatUnitPrice, referencePrices, householdBillComparisons, mvpdBenchmark })'
+const { comparePrice, formatUnitPrice, referencePrices } = vm.runInNewContext(
+  read('tax-model.js') + '\n' + read('comparison.js') + '\n({ comparePrice, formatUnitPrice, referencePrices })'
 );
 
 test('divisible purchases are rounded down to the affordable tenth', () => {
@@ -61,15 +61,3 @@ test('MacBook Air comparison uses a dated retail price and whole laptops', () =>
   assert.equal(comparePrice(1060834, laptop).remaining, 81534);
 });
 
-test('the minimum needs benchmark and personal bills express annual totals in months', () => {
-  assert.equal(comparePrice(881851, mvpdBenchmark).value, '18,8 mėn.');
-  const comparisons = householdBillComparisons(12000, [
-    { productKey: 'electricity', price: 24000 },
-    { productKey: 'electricity', price: 36000 },
-    { productKey: 'heating', price: 120000 },
-    { productKey: 'coldWater', price: 90000 },
-  ]);
-  assert.deepEqual(Array.from(comparisons, (row) => row.quantity), ['2,4 mėn.', '1,2 mėn.']);
-  assert.match(comparisons[0].price, /50,00/);
-  assert.equal(householdBillComparisons(12000, []).length, 0);
-});

@@ -19,17 +19,17 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#f5f5ef">
   <title>Kur keliauja tavo mokesčiai?</title>
-  <link rel="stylesheet" href="./styles.css?v=shopping-20261120">
+  <link rel="stylesheet" href="./styles.css?v=purchase-totals-20261120">
   <script src="./tax-model.js?v=wage-equivalent-20261120" defer></script>
   <script src="./spending-data.js" defer></script>
   <script src="./insurance-spending.js" defer></script>
-  <script src="./purchases.js?v=monthly-20261120" defer></script>
-  <script src="./report.js?v=friend-20261120" defer></script>
-  <script src="./comparison.js?v=macbook-20261120" defer></script>
+  <script src="./purchases.js?v=purchase-totals-20261120" defer></script>
+  <script src="./report.js?v=purchase-totals-20261120" defer></script>
+  <script src="./comparison.js?v=purchase-totals-20261120" defer></script>
   <script src="./share-card.js?v=macbook-20261120" defer></script>
   <script src="./sharing.js" defer></script>
   <script src="./defence-fund.js" defer></script>
-  <script src="./calculator.js?v=annual-income-20261120" defer></script>
+  <script src="./calculator.js?v=purchase-totals-20261120" defer></script>
 </head>
 <body>
   <a class="skip" href="#skaiciuokle">Pereiti prie skaičiuoklės</a>
@@ -304,6 +304,7 @@
           </details>
           <details id="purchase-summary" class="purchase-summary" hidden>
             <summary><span class="details-icon" aria-hidden="true">+</span> Metinės sumos pagal prekę ar paslaugą</summary>
+            <p class="field-help">Mėnesio kiekius ir išlaidas padauginome iš 12. Kaina be mokesčių gauta atėmus apskaičiuotą PVM ir taikomą akcizą.</p>
             <ul id="purchase-results"></ul>
           </details>
         </div>
@@ -348,15 +349,6 @@
         <span>Kortelėje matysis bendra suma ir keturi palyginimai. Paveikslėlį galėsi pridėti prie „Facebook“ įrašo.</span>
       </div>
       <p id="share-card-status" class="field-help share-feedback" role="status"></p>
-      <div class="mvpd-comparison">
-        <div>
-          <h3>Minimalūs vieno žmogaus vartojimo poreikiai</h3>
-          <p>Maisto ir kiti būtinieji poreikiai · <span id="mvpd-price"></span></p>
-          <a id="mvpd-source">Rodiklio šaltinis</a>
-        </div>
-        <strong id="mvpd-equivalent">—</strong>
-      </div>
-      <ul id="personal-comparisons" class="personal-comparisons" aria-label="Palyginimai pagal tavo sąskaitas" hidden></ul>
       <details class="custom-comparison">
         <summary><span class="details-icon" aria-hidden="true">+</span> Palyginti su savo kaina</summary>
         <div class="custom-fields">
@@ -501,13 +493,41 @@
       <div class="comparison-header">
         <div>
           <div class="section-kicker">2025 m. valstybės biudžetas</div>
-          <h2 id="lrt-heading">LRT finansavimas vienam gyventojui</h2>
-          <p>Vidutiniškai <strong>27,57 € per metus</strong>, arba <strong>2,30 € per mėnesį</strong>.</p>
+          <h2 id="lrt-heading">Kiek viešosioms įstaigoms tenka vienam gyventojui?</h2>
+          <p>2025 m. panaudotus asignavimus padalijome iš 2 889 128 – tų metų vidutinio Lietuvos nuolatinių gyventojų skaičiaus. Rodomi šalies vidurkiai.</p>
         </div>
       </div>
-      <p class="field-help">2025 m. LRT gautus 79 641 982,57 € padalijome iš vidutinio nuolatinių gyventojų skaičiaus (2 889 128). Tų metų asignavimų dydis buvo apskaičiuotas pagal 2023 m. šalies GPM ir akcizų įplaukas. Asmeninio įnašo iš įvestų mokesčių nustatyti negalima.</p>
+      <ul class="institution-budget-grid" role="list">
+        <li class="institution-budget">
+          <h3>Bendrasis pagalbos centras (112)</h3>
+          <p class="institution-budget-annual"><strong>5,15 €</strong> per metus</p>
+          <p class="institution-budget-monthly">0,43 € per mėnesį</p>
+          <p class="institution-budget-total">Panaudota 14 887 844,47 €</p>
+          <a href="https://pagd.lrv.lt/public/canonical/1773840046/8172/PAGD%20MBVAR%2020251231.pdf#page=41">PAGD biudžeto vykdymo ataskaita</a>
+        </li>
+        <li class="institution-budget">
+          <h3>LRT</h3>
+          <p class="institution-budget-annual"><strong>27,57 €</strong> per metus</p>
+          <p class="institution-budget-monthly">2,30 € per mėnesį</p>
+          <p class="institution-budget-total">Panaudota 79 641 982,57 €</p>
+          <a href="https://apie.lrt.lt/api/uploads/BVA_su_audito_isvada_2025_500f22d407.pdf#page=4">LRT biudžeto vykdymo ataskaita</a>
+        </li>
+        <li class="institution-budget">
+          <h3>Seimo kanceliarija</h3>
+          <p class="institution-budget-annual"><strong>18,79 €</strong> per metus</p>
+          <p class="institution-budget-monthly">1,57 € per mėnesį</p>
+          <p class="institution-budget-total">Panaudota 54 293 000 €</p>
+          <a href="https://finmin.lrv.lt/public/canonical/1773984051/26904/Priedas_Nr._8_VBV_2025%20m.pdf">Valstybės biudžeto vykdymas · 8 priedas</a>
+        </li>
+        <li class="institution-budget">
+          <h3>Lietuvos nacionalinis muziejus</h3>
+          <p class="institution-budget-annual"><strong>5,88 €</strong> per metus</p>
+          <p class="institution-budget-monthly">0,49 € per mėnesį</p>
+          <p class="institution-budget-total">Panaudota 16 983 400 €</p>
+          <a href="https://finmin.lrv.lt/public/canonical/1773984051/26904/Priedas_Nr._8_VBV_2025%20m.pdf">Valstybės biudžeto vykdymas · 8 priedas</a>
+        </li>
+      </ul>
       <div class="source-links">
-        <a href="https://apie.lrt.lt/api/uploads/BVA_su_audito_isvada_2025_500f22d407.pdf#page=4">LRT · 2025 m. biudžeto vykdymo ataskaita</a>
         <a href="https://dgs-p.eige.europa.eu/data/view?code=ta_demigr_dem_pop_bal__demo_gind">Eurostatas per EIGE · Vidutinis gyventojų skaičius</a>
         <a href="https://apie.lrt.lt/api/uploads/LRT_ataskaita_2025_full_WEB_3bc8c744e0.pdf#page=96">LRT · 2025 m. finansavimo tvarka</a>
       </div>

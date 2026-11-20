@@ -63,10 +63,6 @@ const referencePrices = [
 ];
 
 const comparisonSheets = ["food", "services", "everyday", "household"];
-const mvpdBenchmark = {
-  cents: 46800, unit: "mėn.", source: "2026 m. dydis pagal įsakymą Nr. A1-730",
-  url: "https://www.e-tar.lt/rs/legalact/ab443004d77a11f08918e1adc7c5b1ec/",
-};
 
 const quantityFormat = new Intl.NumberFormat("lt-LT", { maximumFractionDigits: 1 });
 const unitPriceFormat = new Intl.NumberFormat("lt-LT", { style: "currency", currency: "EUR", maximumFractionDigits: 4 });
@@ -87,21 +83,6 @@ function comparePrice(total, price) {
   };
 }
 
-function householdBillComparisons(total, purchases) {
-  const rows = [];
-  const bills = [["electricity", "Tavo elektros išlaidos"], ["heating", "Tavo šildymo išlaidos"],
-    ["hotWater", "Tavo karšto vandens išlaidos"], ["heatAndWater", "Tavo šildymo ir karšto vandens išlaidos"]];
-  for (const [key, label] of bills) {
-    const annual = purchases.filter((item) => item.productKey === key).reduce((sum, item) => sum + item.price, 0);
-    if (annual > 0) rows.push({
-      label,
-      quantity: comparePrice(total * 12, { cents: annual, unit: "mėn." }).value,
-      price: "Vidutiniškai " + money(Math.round(annual / 12)) + " per mėnesį pagal tavo 2025 m. duomenis",
-    });
-  }
-  return rows;
-}
-
 function installPriceComparison(section) {
   const list = section.querySelector(".price-grid");
   const totalLabel = section.querySelector("#comparison-total");
@@ -113,14 +94,7 @@ function installPriceComparison(section) {
   const customUnit = section.querySelector("#custom-unit");
   const customOutput = section.querySelector("#custom-equivalent");
   const customHelp = section.querySelector("#custom-price-help");
-  const personalList = section.querySelector("#personal-comparisons");
-  const mvpdValue = section.querySelector("#mvpd-equivalent");
-  const mvpdPrice = section.querySelector("#mvpd-price");
-  const mvpdSource = section.querySelector("#mvpd-source");
-  mvpdPrice.textContent = formatUnitPrice(mvpdBenchmark);
-  mvpdSource.href = mvpdBenchmark.url;
-  mvpdSource.textContent = mvpdBenchmark.source;
-  let sum = { total: 0, example: true, purchases: [] };
+  let sum = { total: 0, example: true };
 
   const more = section.querySelector("#more-prices");
   const featuredCount = 4;
@@ -162,22 +136,6 @@ function installPriceComparison(section) {
     return { price, quantity, amountNote, card };
   });
 
-  function renderPersonal() {
-    const rows = householdBillComparisons(sum.total, sum.purchases);
-    personalList.hidden = !rows.length;
-    personalList.replaceChildren(...rows.map((row) => {
-      const item = document.createElement("li");
-      const label = document.createElement("span");
-      const value = document.createElement("strong");
-      const basis = document.createElement("small");
-      label.textContent = row.label;
-      value.textContent = row.quantity;
-      basis.textContent = row.price;
-      item.append(label, value, basis);
-      return item;
-    }));
-  }
-
   function showCustomComparison(total) {
     const raw = customPrice.value.trim();
     if (!raw) {
@@ -200,7 +158,6 @@ function installPriceComparison(section) {
     const { total } = sum;
     totalLabel.textContent = money(total);
     caption.textContent = sum.example ? "Metinė suma pagal skaičiuoklės pavyzdį" : "Metinė suma";
-    mvpdValue.textContent = comparePrice(total, mvpdBenchmark).value;
     cards.forEach(({ price, quantity, amountNote }) => {
       const result = comparePrice(total, price);
       quantity.textContent = result.value;
@@ -212,7 +169,6 @@ function installPriceComparison(section) {
           : "Liktų " + money(result.remaining);
       }
     });
-    renderPersonal();
     showCustomComparison(total);
     if (animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const previous = list.getAnimations?.().find((animation) => animation.id === "price-reveal");
@@ -237,7 +193,7 @@ function installPriceComparison(section) {
       sum = next;
       render(animate);
     },
-    reportRows(total, { includePersonal = false } = {}) {
+    reportRows(total) {
       return {
         total: money(total),
         basis: "Bendra mokesčių ir įmokų suma",
@@ -252,8 +208,6 @@ function installPriceComparison(section) {
           sourceKind: price.source.kind,
           url: price.source.url,
         })),
-        mvpd: { quantity: comparePrice(total, mvpdBenchmark).value, price: formatUnitPrice(mvpdBenchmark), url: mvpdBenchmark.url, source: mvpdBenchmark.source },
-        personal: includePersonal ? householdBillComparisons(total, sum.purchases) : [],
       };
     },
   };
