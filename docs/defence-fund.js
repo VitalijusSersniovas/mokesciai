@@ -53,7 +53,7 @@ function installDefenceExample(section) {
     const hasGpm = rates.gpmRate !== null;
     gpmField.hidden = !hasGpm;
     find("guide").textContent = hasGpm
-      ? "Įvesk 2026 m. sumokėto GPM ir pirkinių akcizų sumas. Šis skaičiavimas atliekamas atskirai nuo 2025 m. suvestinės."
+      ? "Įvesk 2026 m. sumokėto GPM ir pirkinių akcizų sumas. Pavyzdys skaičiuojamas pagal čia įvestas sumas."
       : "Įvesk 2025 m. pirkinių akcizų sumą. 2025 m. GPM dalis fondui nustatyta bendra suma visos šalies mastu.";
     find("rates").textContent = hasGpm
       ? "2026 m. fondui skiriama 2 % bendrų valstybės ir savivaldybių GPM įplaukų, atėmus fiksuotą GPM už verslo liudijimus, ir 8 % valstybės akcizų pajamų."

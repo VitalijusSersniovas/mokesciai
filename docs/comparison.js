@@ -13,8 +13,8 @@ const monthlyRetailSource = {
 const fuelPriceSource = {
   name: "Lietuvos energetikos agentūra",
   kind: "Lietuvos degalinių mažmeninių kainų vidurkis",
-  date: "2026-11-19 iki 10 val.",
-  url: "https://www.ena.lt/Naujiena/kdk-20261119/",
+  date: comparisonPriceChecked + " iki 10 val.",
+  url: "https://www.ena.lt/Naujiena/kdk-20261120/",
 };
 
 const electricityPriceSource = {
@@ -27,13 +27,13 @@ const electricityPriceSource = {
 const referencePrices = [
   { photo: 2, label: "Pienas", detail: "Pasterizuotas, 2,5 % riebumo", type: "Maistas", cents: 106, unit: "l", source: monthlyRetailSource },
   { photo: 4, label: "Elektra", detail: "Visuomeninis tiekimas, vienos zonos planas „Standartinis“", type: "Energija", cents: 24, unit: "kWh", source: electricityPriceSource },
-  { photo: 3, label: "Dyzelinas", type: "Degalai", cents: 218.1, unit: "l", source: fuelPriceSource },
+  { photo: 3, label: "Dyzelinas", type: "Degalai", cents: 217.1, unit: "l", source: fuelPriceSource },
   { photo: 5, label: "Danties plombavimas", detail: "Viena helio plomba", type: "Sveikata", cents: 8370, unit: "vnt.", whole: true, source: monthlyRetailSource },
   {
     photo: 7, label: "Apple MacBook Air", detail: "13,6″, M5, 16 GB RAM, 512 GB SSD, sidabrinis (MDH74ZE/A)", type: "Technika", cents: 139900, unit: "vnt.", whole: true,
     source: { name: "RDE.LT", kind: "Pardavėjo internetinė kaina su PVM", date: comparisonPriceChecked, url: "https://www.rde.lt/products/lt/150/1660505/sort/5/filter/0_0_0_0/MacBook-Air-13-6-Retina-M5-16GB-512SSD-EN-sidabrinis-MDH74ZE-A-ne%C5%A1iojamas-kompiuteris.html" },
   },
-  { photo: 3, label: "Benzinas", type: "Degalai", cents: 174.4, unit: "l", source: fuelPriceSource },
+  { photo: 3, label: "Benzinas", type: "Degalai", cents: 172.9, unit: "l", source: fuelPriceSource },
   { photo: 0, label: "Bulvės", type: "Maistas", cents: 64, unit: "kg", source: monthlyRetailSource },
   { photo: 1, label: "Kiaulienos nugarinė", detail: "Be kaulo", type: "Maistas", cents: 484, unit: "kg", source: monthlyRetailSource },
   {

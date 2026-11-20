@@ -49,8 +49,9 @@ class TestElement {
   }
 }
 
-function purchaseForm(product = 'petrol') {
+function purchaseForm(product = 'petrol', initialYear = 2025) {
   const otherOnly = product === 'other';
+  let year = initialYear;
   const ctx = {
     window: {},
     Event: class { constructor(type) { this.type = type; } },
@@ -71,7 +72,7 @@ function purchaseForm(product = 'petrol') {
     error.field = field.id;
     throw error;
   };
-  const editor = ctx.window.createPurchaseEditor(list, add, readInput, showError, otherOnly);
+  const editor = ctx.window.createPurchaseEditor(list, add, readInput, showError, otherOnly, () => year);
   add.dispatchEvent({ type: 'click', preventDefault() {} });
   const field = (name) => list.find((otherOnly ? 'other-purchase-1-' : 'purchase-1-') + name);
   if (product && !otherOnly) {
@@ -87,7 +88,11 @@ function purchaseForm(product = 'petrol') {
     fill('basis', value);
     field('basis').dispatchEvent({ type: 'change' });
   };
-  return { field, fill, chooseBasis, result: () => editor.read()[0] };
+  const setYear = (selectedYear) => {
+    year = selectedYear;
+    editor.refresh();
+  };
+  return { field, fill, chooseBasis, setYear, result: () => editor.read()[0] };
 }
 
 test('new purchase rows start without a choice or active price fields', () => {
@@ -342,4 +347,83 @@ test('heating and hot water may be entered separately or as one bill', () => {
   assert.equal(combined.price, heat.price + water.price);
   assert.ok(Math.abs(combined.vat - (heat.vat + water.vat)) <= 1);
   assert.equal(combined.excise, 0);
+});
+
+test('2026 fuel estimates use dated LEA prices and the restored road diesel tariff', () => {
+  const petrol = purchaseForm('petrol', 2026);
+  petrol.fill('price', 30);
+  assert.equal(petrol.field('known-quantity').placeholder, 'Pvz., 17,4');
+  assert.equal(petrol.result().excise, 11702);
+  assert.equal(petrol.result().netPrice, 18050);
+  assert.match(petrol.result().estimate, /2026 m\. lapkričio 20 d\. iki 10 val\..*1,729 €\/l/);
+
+  petrol.setYear(2025);
+  assert.equal(petrol.field('price').value, '30');
+  assert.equal(petrol.field('known-quantity').placeholder, 'Pvz., 21,1');
+  assert.equal(petrol.result().excise, 12978);
+
+  const diesel = purchaseForm('diesel', 2026);
+  diesel.chooseBasis('quantity');
+  diesel.fill('quantity', 50);
+  assert.equal(diesel.field('known-price').placeholder, 'Pvz., 108,55');
+  assert.equal(diesel.result().price, 130260);
+  assert.equal(diesel.result().excise, 33216);
+  assert.equal(diesel.result().netPrice, 74437);
+  assert.equal(diesel.result().estimatedTax, 'vat');
+});
+
+test('2026 annualized excise uses 2026 units and selected product category', () => {
+  const inputs = [
+    ['gas', 50, null, 22254],
+    ['beer', 8, 5, 6115],
+    ['beerReduced', 8, 5, 3058],
+    ['lightWine', 2, null, 3552],
+    ['wine', 2, null, 7104],
+    ['intermediate', 1, 15, 4380],
+    ['intermediate', 1, 15.01, 4932],
+    ['spirits', 1, 40, 15024],
+    ['cigarettes', 1, null, 3898],
+    ['heated', 20, null, 2414],
+    ['liquid', 10, null, 18720],
+    ['tobacco', 25, null, 4056],
+  ];
+  for (const [product, quantity, strength, expected] of inputs) {
+    const form = purchaseForm(product, 2026);
+    form.chooseBasis('quantity');
+    form.fill('quantity', quantity);
+    if (strength !== null) form.fill('strength', strength);
+    assert.equal(form.result().excise, expected, product);
+  }
+
+  const cigarettes = purchaseForm('cigarettes', 2026);
+  cigarettes.fill('quantity', 1);
+  cigarettes.fill('max-retail', 6);
+  cigarettes.fill('known-price', 6);
+  assert.equal(cigarettes.result().excise, 4212);
+});
+
+test('2026 VAT uses the current bill rate and requires reconfirming unavailable reduced rates', () => {
+  for (const service of ['heating', 'hotWater', 'heatAndWater']) {
+    const form = purchaseForm(service, 2026);
+    form.fill('service-price', 121);
+    assert.equal(form.result().vat, 25200);
+  }
+  const transport = purchaseForm('publicTransport', 2026);
+  transport.fill('service-price', 112);
+  assert.equal(transport.result().vat, 14400);
+
+  const other = purchaseForm('other');
+  other.fill('price', 112);
+  other.fill('vat-rate', 9);
+  assert.equal(other.result().vat, 11097);
+  other.setYear(2026);
+  assert.deepEqual(other.field('vat-rate').children.map(({ value }) => value), ['', '21', '12', '5', '0']);
+  assert.equal(other.field('price').value, '112');
+  assert.equal(other.field('vat-rate').value, '');
+  assert.throws(other.result, (error) => error.field === 'other-purchase-1-vat-rate');
+  other.fill('vat-rate', 12);
+  assert.equal(other.result().vat, 14400);
+  other.fill('vat-rate', 0);
+  other.setYear(2025);
+  assert.equal(other.result().vat, 0);
 });

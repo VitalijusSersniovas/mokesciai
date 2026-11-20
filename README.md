@@ -1,6 +1,6 @@
 # Mano mokesčių euras
 
-2025 m. mokesčių ir įmokų skaičiuoklė, parengta iš 32-osios svetainės versijos. Skaičiavimas vykdomas naršyklėje.
+Mokesčių ir įmokų skaičiuoklė. Pagal mėnesio pajamas ir pirkinius pateikiamas metinis įvertis. Numatytieji tarifai yra 2026 m. ir galima pasirinkti 2025 m. Skaičiavimas vykdomas naršyklėje.
 
 ## Publikavimas
 

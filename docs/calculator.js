@@ -13,11 +13,26 @@ const donut = element("donut");
 const reportHelp = element("report-help");
 const staleResult = element("stale-result");
 const priceComparison = installPriceComparison(element("palyginimas"));
-const vatFields = [
-  { id: "vat-standard", rate: 21 },
-  { id: "vat-9", rate: 9 },
-  { id: "vat-5", rate: 5 },
-];
+const taxYearSelect = element("tax-year");
+const calendarYear = Number(new Intl.DateTimeFormat("lt-LT", {
+  timeZone: "Europe/Vilnius", year: "numeric",
+}).formatToParts(new Date()).find((part) => part.type === "year").value);
+const supportedYears = [...(taxYearSelect?.options ?? [])].map((option) => Number(option.value));
+const defaultTaxYear = supportedYears.find((year) => year <= calendarYear) ?? 2025;
+if (taxYearSelect) taxYearSelect.value = defaultTaxYear;
+const selectedTaxYear = () => Number(taxYearSelect?.value || defaultTaxYear);
+
+function updateYearFields() {
+  if (!taxYearSelect) return;
+  const historical = selectedTaxYear() === 2025;
+  element("vat-9-field").hidden = !historical;
+  element("vat-12-field").hidden = historical;
+  element("reduced-vat-summary").textContent = "Pirkiniai su " + (historical ? "9" : "12") + " % arba 5 % PVM";
+  if (calendarYear > defaultTaxYear) {
+    element("tax-year-help").textContent = "Naujausi patikrinti tarifai yra " + defaultTaxYear
+      + " m. Jei skaičiuoji už ankstesnius metus, įvesk tų metų pajamas ir išlaidas.";
+  }
+}
 
 let showFundShares = false;
 let wageEntryBasis = wageBasis.value;
@@ -70,8 +85,8 @@ function readMonths(id, required = false) {
   return readField(element(id), { required, integer: true, max: 12 }) ?? 0;
 }
 
-const purchaseEditor = window.createPurchaseEditor(element("purchase-list"), element("add-purchase"), readField, showError);
-const otherPurchaseEditor = window.createPurchaseEditor(element("other-purchase-list"), element("add-other-purchase"), readField, showError, true);
+const purchaseEditor = window.createPurchaseEditor(element("purchase-list"), element("add-purchase"), readField, showError, false, selectedTaxYear);
+const otherPurchaseEditor = window.createPurchaseEditor(element("other-purchase-list"), element("add-other-purchase"), readField, showError, true, selectedTaxYear);
 
 function renderIncomeMode() {
   ["wages", "pension", "dividends", "self", "paid"].forEach((mode) => {
@@ -89,8 +104,8 @@ function changeWageBasis() {
   element("wage-pension-field").hidden = !net;
   element("wage-npd-field").hidden = !net;
   element("wage-help").textContent = net
-    ? "Įvesk 2025 m. mėnesio vidurkį. Kintant atlyginimui ar turint kitų pajamų, įvertis gali skirtis nuo algalapio."
-    : "Įvesk 2025 m. mėnesio vidurkį su premijomis.";
+    ? "Įvesk, kiek vidutiniškai gauni į rankas per mėnesį. Kintant atlyginimui ar turint kitų pajamų, įvertis gali skirtis nuo algalapio."
+    : "Įvesk vidutinį mėnesio atlyginimą su premijomis.";
 }
 
 function clearError() {
@@ -120,12 +135,13 @@ function markResultStale() {
   reportHelp.textContent = "Atidarant ataskaitą arba suvestinę, suma bus perskaičiuota pagal naujausius duomenis.";
 }
 
-function markUncalculated() {
+function markUncalculated(event) {
+  if (event.target === taxYearSelect) return;
   clearError();
   markResultStale();
 }
 
-function readIncome() {
+function readIncome(year) {
   switch (incomeMode.value) {
     case "wages": {
       const annual = readMoney("wages", true) * 12;
@@ -137,11 +153,15 @@ function readIncome() {
       const isNet = wageBasis.value === "net";
       const pensionRate = isNet && element("wage-pension").checked ? 0.03 : 0;
       const npd = isNet ? wageNpd.value : null;
-      const gross = isNet ? grossWagesFromNet(annual, higher, lower, undefined, pensionRate, npd !== "no") : annual;
-      if (gross > wageContributionCeiling && higher + lower > 0) {
-        showError(higher ? element("disability-higher") : element("disability-lower"), "Kai taikomas didesnis NPD dėl negalios ir pajamos viršija 126 532,80 €, įvesk faktines 2025 m. sumas režime „Jau sumokėti mokesčiai“.");
+      const inferGross = year === 2025 ? grossWagesFromNet : grossWagesFromPayrollNet;
+      const gross = isNet ? inferGross(annual, higher, lower, undefined, pensionRate, npd !== "no", year) : annual;
+      const threshold = incomeTaxRules(year).firstIncomeTaxThreshold;
+      if (gross > threshold && higher + lower > 0) {
+        showError(higher ? element("disability-higher") : element("disability-lower"),
+          "Kai taikomas didesnis NPD dėl negalios ir pajamos viršija " + money(toCents(threshold))
+            + ", įvesk faktines sumas režime „Jau sumokėti mokesčiai“.");
       }
-      const amounts = wageTaxes(gross, 0, higher, lower, gross, pensionRate);
+      const amounts = wageTaxes(gross, 0, higher, lower, gross, pensionRate, true, year);
       return {
         ...amounts,
         fromNet: isNet,
@@ -153,7 +173,7 @@ function readIncome() {
     }
     case "dividends": {
       const gross = readMoney("dividend", true);
-      const amounts = wageTaxes(0, gross);
+      const amounts = wageTaxes(0, gross, 0, 0, undefined, 0, true, year);
       return { tax: amounts.dividend, vsd: 0, psd: 0, gross: toCents(gross), caption: "Dividendai · metinė GPM prievolė" };
     }
     case "pension": {
@@ -168,7 +188,7 @@ function readIncome() {
       const months = readMonths("self-psd-months", true);
       const carriedLoss = readMoney("self-loss");
       return {
-        ...selfEmploymentTaxes(income, expenses, months, element("self-vsd-exempt").checked, carriedLoss),
+        ...selfEmploymentTaxes(income, expenses, months, element("self-vsd-exempt").checked, carriedLoss, year),
         gross: toCents(income),
         caption: "Individuali veikla pagal pažymą · metinė prievolė",
       };
@@ -178,22 +198,26 @@ function readIncome() {
         tax: toCents(readMoney("paid-tax")),
         vsd: toCents(readMoney("paid-vsd")),
         psd: toCents(readMoney("paid-psd")),
-        caption: "Faktinės sumos už 2025 m. laikotarpį",
+        caption: "Faktinės pajamų mokesčių ir įmokų sumos",
       };
     default:
       return { tax: 0, vsd: 0, psd: 0, caption: "Tik pirkinių mokesčiai" };
   }
 }
 
-const exampleIncome = readIncome();
-const exampleWage = exampleIncome.enteredNet ?? exampleIncome.gross;
-const exampleBasis = exampleIncome.fromNet ? " į rankas" : " ant popieriaus";
+function exampleCaption(income) {
+  if (incomeMode.value !== "wages") return income.caption;
+  const wage = income.enteredNet ?? income.gross;
+  const basis = income.fromNet ? " į rankas" : " ant popieriaus";
+  return "Pavyzdys · " + compactMoney(wage / 12) + basis + " per mėnesį";
+}
+
+const exampleIncome = readIncome(selectedTaxYear());
 let result = {
   ...exampleIncome,
+  year: selectedTaxYear(),
   mode: incomeMode.value,
-  caption: incomeMode.value === "wages"
-    ? taxYear + " m. pavyzdys · " + compactMoney(exampleWage / 12) + exampleBasis + " per mėnesį"
-    : exampleIncome.caption,
+  caption: exampleCaption(exampleIncome),
   example: true,
   vat: 0,
   purchases: [],
@@ -253,7 +277,7 @@ function purchaseCaveats() {
   const warnings = [];
   if (result.purchases.some((item) => item.missingPrice)) warnings.push("Pirkiniams be kainos PVM neapskaičiuotas.");
   if (result.purchases.some((item) => item.missingExcise)) warnings.push("Kai kuriems pirkiniams be kiekio akcizas neapskaičiuotas.");
-  if (result.purchases.some((item) => item.estimate)) warnings.push("Degalams, kurių kiekis ar kaina neįvesti, taikytos 2025 m. vidutinės kainos.");
+  if (result.purchases.some((item) => item.estimate)) warnings.push("Degalams, kurių kiekis ar kaina neįvesti, taikytos prie pirkinių nurodytos vidutinės kainos.");
   if (result.purchases.some((item) => item.minCigarette)) warnings.push("Cigaretėms be kainos rodoma mažiausia akcizo suma.");
   if (result.purchases.some((item) => item.estimatedCigarette)) warnings.push("Kai didžiausia cigarečių kaina nenurodyta, akcizas įvertintas pagal pirkimo išlaidas.");
   if (result.purchases.some((item) => item.cigarettePriceExceedsMaximum)) warnings.push("Cigarečių pirkimo kaina viršija įvestą didžiausią mažmeninę kainą.");
@@ -286,7 +310,7 @@ function purchaseResultRow(item) {
     name: item.name,
     amounts: [
       ["Iš viso per metus su mokesčiais", gross],
-      [item.vatOnly ? "Per metus be PVM" : "Per metus be PVM ir akcizo", net],
+      ["Tikra kaina be mokesčių", net],
     ],
     taxes: purchaseTaxSummary(item),
     note: missing || item.estimate,
@@ -486,9 +510,9 @@ function breakdownRowDetail(row) {
 }
 
 function renderIncomeBreakdown({ total, gpm, vsd, psd }) {
-  const funds = buildInsuranceBreakdown({ mode: result.mode, vsd, psd, fixed: showFundShares });
+  const funds = buildInsuranceBreakdown({ mode: result.mode, vsd, psd, fixed: showFundShares, year: result.year });
   const reference = funds[0].reference;
-  const incomeTax = buildGpmBreakdown(reference ? null : gpm);
+  const incomeTax = buildGpmBreakdown(reference ? null : gpm, result.year);
   if (!reference && gpm === null) {
     incomeTax.note = "GPM įvestas kartu su kitais mokesčiais. Čia pateikiamos bendros GPM proporcijos. " + incomeTax.note;
   }
@@ -498,7 +522,7 @@ function renderIncomeBreakdown({ total, gpm, vsd, psd }) {
   basisButton.textContent = reference ? "Rodyti mano sumas" : "Rodyti bendras proporcijas";
   element("contrib-heading").textContent = reference ? "Bendros GPM, VSD ir PSD proporcijos" : "GPM, VSD ir PSD dalis bendroje sumoje";
   if (reference) {
-    intro.textContent = "GPM dalys nustatytos 2025 m. biudžeto įstatyme. VSD ir PSD proporcijos pagrįstos 2025 m. įmokų tarifais arba fondų ataskaitomis.";
+    intro.textContent = "GPM dalys nustatytos pagal " + result.year + " m. biudžeto tvarką. VSD ir PSD proporcijos pagrįstos įmokų tarifais arba 2025 m. fondų ataskaitomis.";
   } else {
     const amount = document.createElement("strong");
     amount.textContent = money(total);
@@ -536,7 +560,9 @@ function wageEstimate() {
     unknown: "Perskaičiuojant daroma prielaida, kad taikytas metinis NPD.",
   };
   return "Įvertintas metinis atlyginimas ant popieriaus – " + money(result.gross) + ". " + basis[result.npd]
-    + (result.pension ? " II pakopos įmoka (" + money(result.pension) + ") panaudota perskaičiavimui." : "");
+    + (result.pension ? " II pakopos įmoka (" + money(result.pension) + ") panaudota perskaičiavimui." : "")
+    + (result.year >= 2026 && result.gross > toCents(incomeTaxRules(result.year).firstIncomeTaxThreshold)
+      ? " Įvertis remiasi tolygiu atlyginimu. Jei prašei darbdavio GPM tarifą taikyti pagal sukauptas pajamas, naudok sumą ant popieriaus." : "");
 }
 
 function wageEquivalent(total) {
@@ -572,6 +598,16 @@ function renderAnnualIncome() {
   incomeNote.hidden = !note;
 }
 
+function resultYearContext() {
+  const tariffYear = "Taikomi " + result.year + " m. tarifai.";
+  if (result.mode === "paid") {
+    return "Pajamų mokesčiai ir įmokos pagal tavo įvestas sumas. Pirkiniams taikomi " + result.year + " m. tarifai.";
+  }
+  const period = result.year === defaultTaxYear ? "dabartines" : "įvestas";
+  const data = result.mode === "none" ? period + " išlaidas" : period + " pajamas ir išlaidas";
+  return "Metinis įvertis pagal " + data + ". " + tariffYear;
+}
+
 function renderResult(announce = false) {
   const { lines, total, gpm, vsd, psd } = annualTotals();
   const caveats = purchaseCaveats();
@@ -591,13 +627,15 @@ function renderResult(announce = false) {
   baseDetails.hidden = !result.bases?.length;
   renderRows(element("tax-base-rows"), (result.bases ?? []).map(([label, cents]) => ({ label, cents })));
   element("tax-bases-note").textContent = result.mode === "self"
-    ? "2025 m. tarifai. Kai taikomas GPM kreditas, jis suapvalinamas atskirai iki centų."
-    : "2025 m. tarifai. Kai taikomi abu GPM tarifai, šiame modelyje metinis NPD priskiriamas proporcingai.";
+    ? "Kai taikomas GPM kreditas, jis suapvalinamas atskirai iki centų."
+    : "Kai taikomi keli GPM tarifai, šiame modelyje metinis NPD priskiriamas proporcingai.";
   element("wage-estimate").textContent = wageEstimate();
   element("wage-estimate").hidden = !result.fromNet;
   element("amount-kind").textContent = result.mode === "pension" ? pensionTaxNote : automatic
     ? "Pajamų dalis rodo preliminarią metinę prievolę prieš avansų ir išskaičiuotų sumų užskaitymą. Pirkinių mokesčiai apskaičiuoti pagal tavo duomenis."
     : "Suvestinė pagal įvestas sumas ir apskaičiuotus pirkinių mokesčius.";
+  if (element("result-period-label")) element("result-period-label").textContent = result.year + " m.";
+  if (element("result-year-context")) element("result-year-context").textContent = resultYearContext();
   element("result-caption").textContent = result.caption + " · metinė suma";
   element("income-summary").hidden = result.mode === "none";
   renderRows(element("income-rows"), lines.filter((line) => line.group === "income"));
@@ -625,7 +663,8 @@ function reportData(includePurchases) {
   if (includePurchases && result.fromNet) notes.push(wageEstimate());
   if (result.mode === "pension") notes.push(includePurchases ? pensionNote() : pensionTaxNote);
   return {
-    year: taxYear,
+    year: result.year,
+    yearContext: resultYearContext(),
     wageEquivalent: wageEquivalent(total)?.label,
     example: !!result.example,
     mode: result.caption,
@@ -658,14 +697,21 @@ element("insurance-basis").addEventListener("click", () => {
   renderSpendingStatus();
 });
 
-function calculateResult({ scroll = false } = {}) {
+function calculateResult({ scroll = false, example = false } = {}) {
   clearError();
   try {
-    const income = readIncome();
+    const year = selectedTaxYear();
+    const income = readIncome(year);
     const purchases = [...purchaseEditor.read(), ...otherPurchaseEditor.read()];
-    const otherVat = vatFields.reduce((sum, field) => sum + vatInPrice(readMoney(field.id) * purchaseMonthsPerYear, field.rate), 0);
+    const otherVat = [21, year === 2025 ? 9 : 12, 5].reduce((sum, rate) => {
+      const id = rate === 21 ? "vat-standard" : "vat-" + rate;
+      return sum + vatInPrice(readMoney(id) * purchaseMonthsPerYear, rate);
+    }, 0);
     const vat = purchases.reduce((sum, item) => sum + item.vat, otherVat);
-    result = { ...income, mode: incomeMode.value, purchases, vat };
+    result = {
+      ...income, year, mode: incomeMode.value, purchases, vat, example,
+      caption: example ? exampleCaption(income) : income.caption,
+    };
     resultCardSharing.reset();
     staleResult.hidden = true;
     element("stale-comparison").hidden = true;
@@ -685,6 +731,13 @@ function calculateResult({ scroll = false } = {}) {
   }
 }
 
+taxYearSelect?.addEventListener("change", () => {
+  updateYearFields();
+  purchaseEditor.refresh();
+  otherPurchaseEditor.refresh();
+  if (staleResult.hidden) calculateResult({ example: result.example });
+});
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   calculateResult({ scroll: true });
@@ -702,7 +755,7 @@ const resultCardSharing = installResultCardSharing(() => {
   if (!staleResult.hidden && !calculateResult()) return null;
   const { total } = annualTotals();
   return {
-    year: taxYear,
+    year: result.year,
     example: !!result.example,
     comparison: priceComparison.reportRows(total),
     caveats: purchaseCaveats(),
@@ -711,6 +764,7 @@ const resultCardSharing = installResultCardSharing(() => {
 });
 
 installPublicLinkSharing();
+updateYearFields();
 renderIncomeMode();
 renderResult();
 selectSpendingTabFromLink();

@@ -1,6 +1,9 @@
 "use strict";
 
-const employeeVsdSource = "https://sodra.lt/wp-content/uploads/2025/08/Imoku-tarifai-draudejams-turintiems-samdomu-darbuotoju2.pdf";
+const employeeVsdSources = {
+  2025: "https://sodra.lt/wp-content/uploads/2025/08/Imoku-tarifai-draudejams-turintiems-samdomu-darbuotoju2.pdf",
+  2026: "https://sodra.lt/nuo-2026-m-sausio-1-d-taikomi-sodros-imoku-tarifai-turintiems-samdomu-darbuotoju",
+};
 const selfVsdSource = "https://sodra.lt/imoku-tarifai/imoku-tarifai-taikomi-savarankiskai-dirbantiems-asmenims";
 const vsdfSource = "https://lrv.lt/media/viesa/saugykla/2026/5/mq0bPXzVC9c.pdf#page=4";
 const psdfSource = "https://ligoniukasa.lrv.lt/public/canonical/1774349223/14064/2025%20m.%20PSDF%20biud%C5%BEeto%20vykdymo%20%20ataskaita.xlsx";
@@ -9,7 +12,7 @@ const pensionInsurance = "Pensijų draudimas";
 const sicknessInsurance = "Ligos draudimas";
 const parentalInsurance = "Motinystės, tėvystės ir vaiko priežiūros išmokos";
 
-// 2025 m. VSD tarifo dalys šimtosiomis procentinio punkto dalimis.
+// 2025 ir 2026 m. VSD tarifo dalys šimtosiomis procentinio punkto dalimis.
 const personalVsdWeights = [
   [pensionInsurance, 872],
   [sicknessInsurance, 199],
@@ -35,15 +38,16 @@ const psdfExpenseWeights = [
   ["Draudimo administravimas ir įmokų surinkimas", 3_724_101_952],
 ];
 
-function buildInsuranceBreakdown({ mode, vsd, psd, fixed = false }) {
+function buildInsuranceBreakdown({ mode, vsd, psd, fixed = false, year = 2025 }) {
   const reference = fixed || mode === "none";
   const byVsdRate = !reference && (mode === "wages" || mode === "self");
   const vsdTotal = reference ? 10_000 : vsd;
   const psdTotal = reference ? 10_000 : psd;
   const vsdNote = byVsdRate
-    ? "2025 m. VSD tarifą sudaro 8,72 % įmokų bazės pensijų draudimui, 1,99 % ligos draudimui ir 1,81 % motinystės draudimui."
+    ? `${year} m. VSD tarifą sudaro 8,72 % įmokų bazės pensijų draudimui, 1,99 % ligos draudimui ir 1,81 % motinystės draudimui.`
     : "Pavyzdys pagal „Sodros“ fondo 2025 m. sąnaudų proporcijas. Fondas taip pat gauna darbdavių įmokas ir valstybės biudžeto lėšas.";
   const manualNote = !reference && !byVsdRate ? " Įvestos VSD įmokos sudėtis priklauso nuo draudimo rūšies." : "";
+  const personalVsdSource = mode === "self" ? selfVsdSource : employeeVsdSources[year];
 
   return [
     {
@@ -53,8 +57,8 @@ function buildInsuranceBreakdown({ mode, vsd, psd, fixed = false }) {
       reference,
       note: vsdNote + manualNote,
       rows: insuranceRows(vsdTotal, byVsdRate ? personalVsdWeights : vsdfExpenseWeights),
-      sourceName: byVsdRate ? "„Sodra“ · 2025 m. tarifai" : "„Sodra“ · 2025 m. fondo sąnaudos",
-      sourceUrl: byVsdRate ? (mode === "self" ? selfVsdSource : employeeVsdSource) : vsdfSource,
+      sourceName: byVsdRate ? `„Sodra“ · ${year} m. tarifai` : "„Sodra“ · 2025 m. fondo sąnaudos",
+      sourceUrl: byVsdRate ? personalVsdSource : vsdfSource,
     },
     {
       id: "psd",

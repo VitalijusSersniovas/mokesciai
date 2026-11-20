@@ -8,9 +8,9 @@ const root = path.join(__dirname, '..', 'docs');
 const read = (name) => fs.readFileSync(path.join(root, name), 'utf8');
 const model = vm.runInNewContext(
   read('tax-model.js') + read('comparison.js') + read('spending-data.js') + read('insurance-spending.js') +
-  '\n({ toCents, wageTaxes, grossWagesFromNet, wageTaxMonths, selfEmploymentTaxes, vatInPrice, expenditures, expenditureTotal, spendingYear, buildSpendingBreakdown, comparePrice, referencePrices, buildGpmBreakdown, buildInsuranceBreakdown, vsdfExpenseWeights, psdfExpenseWeights })'
+  '\n({ toCents, wageTaxes, grossWagesFromNet, grossWagesFromPayrollNet, wageTaxMonths, selfEmploymentTaxes, vatInPrice, expenditures, expenditureTotal, spendingYear, buildSpendingBreakdown, comparePrice, referencePrices, buildGpmBreakdown, buildInsuranceBreakdown, vsdfExpenseWeights, psdfExpenseWeights })'
 );
-const { toCents, wageTaxes, grossWagesFromNet, wageTaxMonths, selfEmploymentTaxes, vatInPrice, expenditures, expenditureTotal, spendingYear, buildSpendingBreakdown, comparePrice, referencePrices, buildGpmBreakdown, buildInsuranceBreakdown, vsdfExpenseWeights, psdfExpenseWeights } = model;
+const { toCents, wageTaxes, grossWagesFromNet, grossWagesFromPayrollNet, wageTaxMonths, selfEmploymentTaxes, vatInPrice, expenditures, expenditureTotal, spendingYear, buildSpendingBreakdown, comparePrice, referencePrices, buildGpmBreakdown, buildInsuranceBreakdown, vsdfExpenseWeights, psdfExpenseWeights } = model;
 
 test('money rounds decimal half-cents upward', () => {
   assert.equal(toCents(1.005), 101);
@@ -74,6 +74,53 @@ test('net wages invert the 2025 model with disability months, alternate insuranc
   }
 });
 
+const wages2026 = (gross, { dividend = 0, higherMonths = 0, lowerMonths = 0, pensionRate = 0, useNpd = true } = {}) =>
+  wageTaxes(gross, dividend, higherMonths, lowerMonths, undefined, pensionRate, useNpd, 2026);
+
+test('2026 annual NPD follows the new MMA, a single taper and unchanged disability amounts', () => {
+  assert.equal(wages2026(13_836).bases[1][1], 896400);
+  assert.equal(wages2026(24_000).bases[1][1], 398364);
+  assert.equal(wages2026(24_000).tax, 400327);
+  assert.equal(wages2026(32_129.88).bases[1][1], 0);
+  assert.equal(wages2026(24_000, { higherMonths: 5, lowerMonths: 7 }).bases[1][1], 1303400);
+  assert.equal(wages2026(24_000, { dividend: 1_000 }).tax, 410127);
+  assert.equal(wages2026(24_000, { dividend: 1_000 }).dividend, 15000);
+  assert.equal(wages2026(0, { dividend: 150_000 }).dividend, 2250000);
+});
+
+test('2026 wages use 20, 25 and 32 percent GPM, with separate VSD and PSD bases', () => {
+  assert.equal(wages2026(83_237.40).tax, 1664748);
+  assert.equal(wages2026(100_000).tax, 2083813);
+  assert.equal(wages2026(138_729).tax, 3052038);
+  const higherWages = wages2026(150_000, { pensionRate: 0.03 });
+  assert.equal(higherWages.tax, 3412710);
+  assert.equal(higherWages.vsd, 1736887);
+  assert.equal(higherWages.psd, 1047000);
+  assert.equal(higherWages.pension, 416187);
+});
+
+test('2026 net-to-gross estimates reproduce the monthly input, including the initial 1100 euro example', () => {
+  const annualNet = 1_100 * 12;
+  assert.equal(grossWagesFromNet(annualNet, 0, 0, undefined, 0, true, 2026), 19_824.99);
+  assert.equal(grossWagesFromNet(annualNet, 0, 0, undefined, 0.03, true, 2026), 21_071.82);
+  assert.equal(grossWagesFromNet(annualNet, 0, 0, undefined, 0, false, 2026), 21_818.17);
+  for (const gross of [13_836, 32_129.88, 83_237.40, 138_729, 150_000]) {
+    const { net } = wages2026(gross, { pensionRate: 0.03 });
+    const inferred = grossWagesFromNet(net / 100, 0, 0, undefined, 0.03, true, 2026);
+    // Separate cent rounding can give neighboring gross amounts the same net.
+    assert.ok(Math.abs(toCents(inferred) - toCents(gross)) <= 5);
+    assert.equal(wages2026(inferred, { pensionRate: 0.03 }).net, net);
+  }
+});
+
+test('2026 regular payroll can withhold 20 percent while the annual return applies progressive GPM', () => {
+  // At 100000 gross, twelve equal payroll payments have 20000 in withheld GPM and 19500 in contributions.
+  const gross = grossWagesFromPayrollNet(60_500, 0, 0, undefined, 0, true, 2026);
+  assert.equal(gross, 100_000);
+  assert.equal(wages2026(gross).net, 5966187);
+  assert.equal(grossWagesFromPayrollNet(1_100 * 12, 0, 0, undefined, 0, true, 2026), 19_824.99);
+});
+
 test('individual activity tax credit rounds separately', () => {
   const exact = selfEmploymentTaxes(24541.84, 0, 0, true);
   assert.equal(exact.psd, 154172);
@@ -87,6 +134,31 @@ test('individual activity tax credit rounds separately', () => {
   const overCeiling = selfEmploymentTaxes(200000, null, 12, false);
   assert.equal(overCeiling.vsd, 1135337);
   assert.equal(overCeiling.psd, 632959);
+});
+
+test('2026 individual activity credit phases out at 42500 and higher profit uses the progressive bands', () => {
+  // The 30 percent expense allowance leaves exactly 20000, 30000 and 42500 euros of taxable profit.
+  const withFlatExpenses = (revenue) => selfEmploymentTaxes(revenue, null, 0, false, 0, 2026);
+  assert.equal(withFlatExpenses(28_571.43).tax, 100000);
+  assert.equal(withFlatExpenses(42_857.14).tax, 350000);
+  assert.equal(withFlatExpenses(60_714.29).tax, 850000);
+  assert.equal(withFlatExpenses(70_000).tax, 980000);
+  assert.equal(withFlatExpenses(150_000).tax, 2208813);
+  const higherProfit = withFlatExpenses(200_000);
+  assert.equal(higherProfit.tax, 3092710);
+  assert.equal(higherProfit.vsd, 1244769);
+  assert.equal(higherProfit.psd, 693969);
+});
+
+test('2026 individual activity keeps the PSD floor and accepts eligible prior losses', () => {
+  const withMinimum = selfEmploymentTaxes(10_000, 2_000, 12, false, 0, 2026);
+  assert.equal(withMinimum.tax, 30664);
+  assert.equal(withMinimum.vsd, 90144);
+  assert.equal(withMinimum.psd, 96576);
+  const taxableProfitExhausted = selfEmploymentTaxes(10_000, 2_000, 4, false, 12_000, 2026);
+  assert.equal(taxableProfitExhausted.tax, 0);
+  assert.equal(taxableProfitExhausted.vsd, 0);
+  assert.equal(taxableProfitExhausted.psd, 32192);
 });
 
 test('2025 GPM311 Annex 7 example 5 deducts carried losses before GPM, VSD and PSD', () => {
@@ -157,8 +229,8 @@ test('purchasing benchmarks apply the full amount separately to each price', () 
   assert.equal(comparePrice(868327, phone).quantity, 7);
   assert.equal(comparePrice(868327, referencePrices.find((price) => price.label === 'Skalbyklė')).quantity, 26);
   const diesel = referencePrices.find((price) => price.label === 'Dyzelinas');
-  assert.equal(diesel.cents, 218.1);
-  assert.equal(comparePrice(868327, diesel).quantity, 3981.3);
+  assert.equal(diesel.cents, 217.1);
+  assert.equal(comparePrice(868327, diesel).quantity, 3999.6);
   assert.equal(comparePrice(114899, phone).remaining, 114899);
   assert.equal(comparePrice(483, referencePrices.find((price) => price.label === 'Elektra')).quantity, 20.1);
   assert.ok(referencePrices.every((price) => price.source.date.startsWith('2026')));

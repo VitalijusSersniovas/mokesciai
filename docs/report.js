@@ -186,7 +186,7 @@
 
   function comparisonBasis(data) {
     const date = data.comparison?.priceChecked;
-    const basis = `Kiekvienam palyginimui naudojama visa ${data.year} m. mokesčių ir įmokų suma bei kortelėje nurodyta kaina su mokesčiais.`;
+    const basis = "Kiekvienam palyginimui naudojama apskaičiuota metinė mokesčių ir įmokų suma bei kortelėje nurodyta kaina su mokesčiais.";
     return date ? `${basis} Paskutinė kainos šaltinio patikra ${date}.` : basis;
   }
 
@@ -212,6 +212,7 @@
         <div class="tax-report-brand">${brand}</div>
         <h1>${escapeHtml(data.year)} m. mokesčių ataskaita</h1>
         <p>${escapeHtml(data.mode)}</p>
+        ${data.yearContext ? `<p class="tax-report-year-context">${escapeHtml(data.yearContext)}</p>` : ""}
         ${caveat ? `<p class="tax-report-caveat"><strong>Skaičiavimo pastaba.</strong> ${escapeHtml(caveat)}</p>` : ""}
       </header>
       ${comparisonSection}
@@ -237,6 +238,7 @@
     .tax-report-document h2 { font-size: 1.13rem; line-height: 1.3; letter-spacing: -.015em; }
     .tax-report-document p { color: #435467; }
     .tax-report-document h1 + p, .tax-report-document h2 + p { margin-top: 6px; }
+    .tax-report-document .tax-report-year-context { margin-top: 5px; }
     .tax-report-document .tax-report-caveat { margin-top: 12px; padding: 10px 12px; border-left: 3px solid #9b592f; background: #fff0db; color: #633b24; overflow-wrap: anywhere; }
     .tax-report-amount { margin-top: 16px; padding: 12px 15px; border: 1px solid #cadfd6; border-radius: 10px; background: #e9f4ef; color: #123f38; }
     .tax-report-amount span { display: block; font-size: .8rem; font-weight: 700; }
@@ -370,7 +372,7 @@
       resultCaveat(data),
       data.wageEquivalent ? "Bendra metinė mokesčių ir įmokų suma prilygsta " + data.wageEquivalent + " atlyginimo ant popieriaus." : "",
       ...data.rows.map(([label, amount]) => `${label} · ${amount}`),
-      "Preliminarus skaičiavimas.",
+      data.yearContext || "Preliminarus skaičiavimas.",
       safeShareUrl(data.url),
     ].filter(Boolean).join("\n");
   }
@@ -390,7 +392,7 @@
       return `${item.label} · ${item.quantity} (${context})` + (url ? "\n" + url.href : "");
     });
     return [
-      [brand, `${data.year} m. mokesčių ataskaita`, data.mode].join("\n"),
+      [brand, `${data.year} m. mokesčių ataskaita`, data.mode, data.yearContext].filter(Boolean).join("\n"),
       caveat ? "Skaičiavimo pastaba. " + caveat : "",
       comparisons.length ? paragraph("Perkamosios galios palyginimas", [comparisonBasis(data), `${comparison.basis} · ${comparison.total}`, ...comparisons]) : "",
       `Metiniai mokesčiai ir įmokos · ${data.total}`,

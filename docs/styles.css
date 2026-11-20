@@ -220,6 +220,8 @@ details[open] .details-icon { transform: rotate(45deg); }
 .purchase-row .field label { font-size: .78rem; }
 .remove-purchase { min-height: 46px; background: transparent; border: 0; border-radius: 6px; color: #88404a; padding-inline: 5px; font-size: .77rem; text-decoration: underline; text-underline-offset: 3px; }
 .remove-purchase:hover { background: #f6e9e9; }
+.tax-year-choice { padding-inline: 4px; }
+.tax-year-choice .field { max-width: 300px; }
 .compute-actions { padding-inline: 2px; }
 .calculate { min-height: 50px; }
 .compute-actions .privacy { padding-top: 8px; }
@@ -250,6 +252,7 @@ input:focus-visible, select:focus-visible { z-index: 1; }
 }
 
 .result-message { color: var(--muted); font-size: .76rem; line-height: 1.45; padding-block: 9px; }
+.result-message.result-year-context { color: var(--teal); font-size: .85rem; font-weight: 700; padding-bottom: 0; }
 .result-message + .summary-group { border-top: 1px solid #dce3e1; }
 .annual-income { margin: .55rem 0 .85rem; padding: .8rem .9rem; border: 1px solid #dce3e1; border-radius: 12px; background: #f5f8f6; }
 .annual-income h3 { font-size: .95rem; }

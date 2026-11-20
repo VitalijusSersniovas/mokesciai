@@ -12,8 +12,8 @@ const { comparePrice, formatUnitPrice, referencePrices } = vm.runInNewContext(
 test('divisible purchases are rounded down to the affordable tenth', () => {
   const diesel = referencePrices.find((price) => price.label === 'Dyzelinas');
   assert.equal(comparePrice(100, diesel).quantity, 0.4);
-  assert.equal(comparePrice(218, diesel).quantity, 0.9);
-  assert.equal(comparePrice(219, diesel).quantity, 1);
+  assert.equal(comparePrice(217, diesel).quantity, 0.9);
+  assert.equal(comparePrice(218, diesel).quantity, 1);
   assert.equal(comparePrice(1, diesel).value, '< 0,1 l');
   assert.equal(comparePrice(0, diesel).value, '0 l');
 });
@@ -22,11 +22,11 @@ test('fuel comparisons use the dated 2026 LEA prices with diesel featured and pe
   const featured = referencePrices.slice(0, 4);
   const petrol = referencePrices.find((price) => price.label === 'Benzinas');
   assert.equal(featured[2].label, 'Dyzelinas');
-  assert.equal(featured[2].cents, 218.1);
-  assert.equal(featured[2].source.date, '2026-11-19 iki 10 val.');
+  assert.equal(featured[2].cents, 217.1);
+  assert.equal(featured[2].source.date, '2026-11-20 iki 10 val.');
   assert.ok(referencePrices.indexOf(petrol) >= featured.length);
-  assert.equal(petrol.cents, 174.4);
-  assert.equal(comparePrice(1744, petrol).value, '10 l');
+  assert.equal(petrol.cents, 172.9);
+  assert.equal(comparePrice(1729, petrol).value, '10 l');
   assert.equal(petrol.source.date, featured[2].source.date);
   assert.ok(!referencePrices.some((price) => price.type === 'Susisiekimas'));
 });

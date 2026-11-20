@@ -133,23 +133,31 @@ function buildSpendingBreakdown(total) {
   });
 }
 
-function buildGpmBreakdown(cents) {
-  // Biudžeto patvirtinimo įstatymo Nr. XV-89 3 str. 2 d. 1 p.
+function buildGpmBreakdown(cents, year = 2025) {
+  const defenceShare = Number(year) === 2026 ? 20_000 : 0;
+  // 2026 m. 50,44 % savivaldybėms skaičiuojami nuo likučio, atskaičius 2 % Gynybos fondui.
+  const municipalShare = defenceShare ? 494_312 : 506_400;
   const destinations = [
-    ["Visų savivaldybių biudžetams", 5064],
-    ["Valstybės biudžetui", 4936],
+    ["Visų savivaldybių biudžetams", municipalShare],
+    ["Valstybės biudžetui", 1_000_000 - municipalShare - defenceShare],
   ];
+  if (defenceShare) destinations.push(["Valstybės gynybos fondui", defenceShare]);
   const reference = cents === null;
   const total = cents ?? 10_000;
   const amounts = apportion(total, destinations.map(([, weight]) => weight));
+  const note = defenceShare
+    ? "Gynybos fondui skiriama 2 % GPM, o visoms savivaldybėms kartu tenka 50,44 % likusios sumos."
+    : "Pagal 2025 m. biudžeto tvarką GPM dalis apskaičiuojama visoms savivaldybėms kartu.";
   return {
     id: "gpm",
     name: "GPM · Gyventojų pajamų mokestis",
     total,
     reference,
-    note: "Pagal 2025 m. biudžeto tvarką GPM dalis apskaičiuojama visoms savivaldybėms kartu. Fiksuotam verslo liudijimo GPM taikoma atskira tvarka.",
-    rows: destinations.map(([label, weight], index) => ({ label, cents: amounts[index], share: weight / 10_000 })),
-    sourceName: "VMI · 2025 m. GPM paskirstymas",
-    sourceUrl: "https://www.vmi.lt/evmi/documents/20142/753727/NB_apzvalga_2025m%2B%281%29.pdf/b9db3445-2e7d-de44-8163-e4dd2e467107?t=1777545236783",
+    note: note + " Fiksuotam verslo liudijimo GPM taikoma atskira tvarka.",
+    rows: destinations.map(([label, weight], index) => ({ label, cents: amounts[index], share: weight / 1_000_000 })),
+    sourceName: defenceShare ? "2026 m. biudžeto patvirtinimo įstatymas" : "VMI · 2025 m. GPM paskirstymas",
+    sourceUrl: defenceShare
+      ? "https://www.e-tar.lt/portal/lt/legalAct/dcff3500df1711f08918e1adc7c5b1ec"
+      : "https://www.vmi.lt/evmi/documents/20142/753727/NB_apzvalga_2025m%2B%281%29.pdf/b9db3445-2e7d-de44-8163-e4dd2e467107?t=1777545236783",
   };
 }

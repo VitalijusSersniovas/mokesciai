@@ -151,7 +151,7 @@ test('report dialog gives a direct HTML download and a separate print document',
   assert.equal(images.length, 2);
   const preview = dialog.find((element) => element.tag === 'article');
   assert.match(preview.innerHTML, /src="\.\/media\/palyginimai-maistas\.webp"/u);
-  const comparisonDates = /2025 m\. mokesčių ir įmokų suma bei kortelėje nurodyta kaina su mokesčiais\. Paskutinė kainos šaltinio patikra 2026-11-19\./u;
+  const comparisonDates = /apskaičiuota metinė mokesčių ir įmokų suma bei kortelėje nurodyta kaina su mokesčiais\. Paskutinė kainos šaltinio patikra 2026-11-19\./u;
   assert.match(preview.innerHTML, comparisonDates);
   assert.match(dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value, comparisonDates);
   images.forEach((image) => image.onload());
@@ -230,18 +230,18 @@ test('annual gross and net purchase prices are labelled in preview, download, pr
     purchases: [
       {
         name: 'Bešvinis benzinas',
-        amounts: [['Iš viso per metus su mokesčiais', '240,00 €'], ['Per metus be PVM ir akcizo', '≈ 112,17 €']],
+        amounts: [['Iš viso per metus su mokesčiais', '240,00 €'], ['Tikra kaina be mokesčių', '≈ 112,17 €']],
         taxes: 'Akcizas ≈ 86,18 € · PVM 41,65 €',
       },
       {
         name: 'Vynas',
-        amounts: [['Iš viso per metus su mokesčiais', 'Kaina neįvesta'], ['Per metus be PVM ir akcizo', 'Neapskaičiuota']],
+        amounts: [['Iš viso per metus su mokesčiais', 'Kaina neįvesta'], ['Tikra kaina be mokesčių', 'Neapskaičiuota']],
         taxes: 'PVM neskaičiuotas',
         note: 'Įvesk pirkimo kainą.',
       },
       {
         name: 'Buitinė elektra',
-        amounts: [['Iš viso per metus su mokesčiais', '480,00 €'], ['Per metus be PVM', '396,69 €']],
+        amounts: [['Iš viso per metus su mokesčiais', '480,00 €'], ['Tikra kaina be mokesčių', '396,69 €']],
         taxes: 'PVM 83,31 €',
       },
     ],
@@ -251,15 +251,15 @@ test('annual gross and net purchase prices are labelled in preview, download, pr
   const preview = dialog.find((element) => element.tag === 'article');
   const printCopy = document.body.find((element) => element.classes.has('tax-report-print-copy'));
   for (const html of [preview.innerHTML, await files[0].text(), printCopy.innerHTML]) {
-    assert.match(html, /<dt>Iš viso per metus su mokesčiais<\/dt><dd>240,00 €<\/dd>.*<dt>Per metus be PVM ir akcizo<\/dt><dd>≈ 112,17 €<\/dd>/u);
+    assert.match(html, /<dt>Iš viso per metus su mokesčiais<\/dt><dd>240,00 €<\/dd>.*<dt>Tikra kaina be mokesčių<\/dt><dd>≈ 112,17 €<\/dd>/u);
     assert.match(html, /Akcizas ≈ 86,18 € · PVM 41,65 €/u);
     assert.match(html, /Mėnesio kiekius ir išlaidas padauginome iš 12\./u);
     assert.match(html, /<dd>Kaina neįvesta<\/dd>.*<dd>Neapskaičiuota<\/dd>/u);
     assert.match(html, /<p>PVM neskaičiuotas<\/p>\s*<p>Įvesk pirkimo kainą\.<\/p>/u);
-    assert.match(html, /<dt>Per metus be PVM<\/dt><dd>396,69 €<\/dd>/u);
+    assert.match(html, /<dt>Tikra kaina be mokesčių<\/dt><dd>396,69 €<\/dd>/u);
   }
   const text = dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value;
-  assert.match(text, /Bešvinis benzinas\nIš viso per metus su mokesčiais · 240,00 €\nPer metus be PVM ir akcizo · ≈ 112,17 €/u);
+  assert.match(text, /Bešvinis benzinas\nIš viso per metus su mokesčiais · 240,00 €\nTikra kaina be mokesčių · ≈ 112,17 €/u);
 });
 
 test('spending groups use projected amounts and expand for print and for downloading', async () => {
