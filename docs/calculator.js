@@ -186,10 +186,14 @@ function readIncome() {
 }
 
 const exampleIncome = readIncome();
+const exampleWage = exampleIncome.enteredNet ?? exampleIncome.gross;
+const exampleBasis = exampleIncome.fromNet ? " į rankas" : " ant popieriaus";
 let result = {
   ...exampleIncome,
   mode: incomeMode.value,
-  caption: taxYear + " m. pavyzdys · " + compactMoney(exampleIncome.enteredNet / 12) + " į rankas per mėnesį",
+  caption: incomeMode.value === "wages"
+    ? taxYear + " m. pavyzdys · " + compactMoney(exampleWage / 12) + exampleBasis + " per mėnesį"
+    : exampleIncome.caption,
   example: true,
   vat: 0,
   purchases: [],
