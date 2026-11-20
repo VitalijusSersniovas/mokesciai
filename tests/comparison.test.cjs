@@ -48,6 +48,19 @@ test('whole purchases retain the exact break point at the listed retail price', 
   assert.equal(comparePrice(114900, phone).remaining, 0);
 });
 
+test('MacBook Air comparison uses a dated retail price and whole laptops', () => {
+  const laptop = referencePrices.find((price) => price.label === 'Apple MacBook Air');
+  assert.match(laptop.detail, /M5, 16 GB RAM, 512 GB SSD/);
+  assert.match(formatUnitPrice(laptop), /1\s399,00/);
+  assert.equal(laptop.source.date, '2026-11-20');
+  assert.equal(new URL(laptop.source.url).hostname, 'www.rde.lt');
+  assert.equal(laptop.photo, 7);
+  assert.equal(comparePrice(139899, laptop).quantity, 0);
+  assert.equal(comparePrice(139900, laptop).quantity, 1);
+  assert.equal(comparePrice(1060834, laptop).quantity, 7);
+  assert.equal(comparePrice(1060834, laptop).remaining, 81534);
+});
+
 test('the minimum needs benchmark and personal bills express annual totals in months', () => {
   assert.equal(comparePrice(881851, mvpdBenchmark).value, '18,8 mėn.');
   const comparisons = householdBillComparisons(12000, [

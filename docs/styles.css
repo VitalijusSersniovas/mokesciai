@@ -240,6 +240,13 @@ input:focus-visible, select:focus-visible { z-index: 1; }
 
 .result-message { color: var(--muted); font-size: .76rem; line-height: 1.45; padding-block: 9px; }
 .result-message + .summary-group { border-top: 1px solid #dce3e1; }
+.annual-income { margin: .55rem 0 .85rem; padding: .8rem .9rem; border: 1px solid #dce3e1; border-radius: 12px; background: #f5f8f6; }
+.annual-income h3 { font-size: .95rem; }
+.annual-income dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: .45rem 0 0; }
+.annual-income dl > div { display: block; border: 0; padding: 0; }
+.annual-income dt { color: var(--muted); font-size: .8rem; }
+.annual-income dd { margin: .15rem 0 0; text-align: left; font-size: clamp(1rem, 3.8vw, 1.45rem); font-weight: 760; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.annual-income dl > div:last-child dd { color: var(--teal); }
 .stale-message, .warning-message { color: #714619; }
 .result-message.stale-message, .result-message.warning-message { border-bottom: 1px solid #ebdfcc; font-weight: 690; }
 #tax-bases-note { margin-bottom: 4px; }

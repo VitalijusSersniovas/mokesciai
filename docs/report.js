@@ -188,7 +188,7 @@
   function comparisonBasis(data) {
     const date = data.comparison?.priceChecked;
     const basis = `Kiekvienam palyginimui naudojama visa ${data.year} m. mokesčių ir įmokų suma bei kortelėje nurodyta kaina su mokesčiais.`;
-    return date ? `${basis} Kainų šaltiniai patikrinti ${date}.` : basis;
+    return date ? `${basis} Paskutinė kainos šaltinio patikra ${date}.` : basis;
   }
 
   function comparisonExtras(comparison) {
@@ -467,6 +467,11 @@
       .tax-export-text { display: block; width: 100%; min-height: 126px; margin-block: 8px; resize: vertical; padding: 8px; font: inherit; font-size: .88rem; color: #18283c; background: #f8faf9; border: 1px solid #cdded7; border-radius: 6px; }
       .tax-export-text:focus { outline-color: #127064; }
       .tax-export-copy { border-top: 1px solid #dce3e1; padding-block: 6px; }
+      .tax-export-share { margin-block: 12px; padding: 12px; border: 1px solid #cadfd6; border-radius: 10px; background: #f4faf7; }
+      .tax-export-share h3 { margin: 0; font-size: .97rem; }
+      .tax-export-share .tax-export-actions { margin-block: 9px 0; }
+      .tax-export-share .tax-export-text[hidden] { display: none; }
+      .tax-export-share input.tax-export-text { min-height: 0; }
       .tax-export-dialog .tax-report-document { border-top: 1px solid #dce3e1; padding-top: 16px; margin-top: 10px; }
       .tax-report-print-copy { display: none; }
       @media print {
@@ -544,21 +549,22 @@
     return field;
   }
 
-  async function copyText(field, status) {
+  async function copyText(field, status, copied = "Tekstas nukopijuotas.") {
     try {
       if (typeof navigator.clipboard?.writeText === "function") {
         await navigator.clipboard.writeText(field.value);
-        status.textContent = "Tekstas nukopijuotas.";
+        status.textContent = copied;
         return;
       }
     } catch {
       // The browser may restrict clipboard access inside a preview.
     }
+    field.hidden = false;
     field.focus();
     field.select();
     try {
       if (typeof document.execCommand === "function" && document.execCommand("copy")) {
-        status.textContent = "Tekstas nukopijuotas.";
+        status.textContent = copied;
         return;
       }
     } catch {
@@ -573,6 +579,44 @@
     const status = makeParagraph("", "tax-export-status");
     status.setAttribute("role", "status");
     return { actions, status };
+  }
+
+  function reportSharing(data) {
+    const url = safeShareUrl(data.url);
+    const section = document.createElement("section");
+    section.className = "tax-export-share";
+    section.setAttribute("aria-labelledby", "tax-export-share-heading");
+    const heading = document.createElement("h3");
+    heading.id = "tax-export-share-heading";
+    heading.textContent = "Pasidalyti su draugu";
+    const { actions, status } = makeActions();
+    const summary = selectableText(summaryText(data), "Mokesčių suvestinė dalijimuisi");
+    summary.hidden = true;
+    const copySummary = makeButton("Kopijuoti mokesčių suvestinę");
+    copySummary.addEventListener("click", () => copyText(summary, status, "Mokesčių suvestinė nukopijuota."));
+    section.append(heading, makeParagraph("Nuoroda atveria skaičiuoklę. Suvestinėje pateikiamos tavo metinės mokesčių sumos."));
+    if (url) {
+      const linkField = document.createElement("input");
+      linkField.className = "tax-export-text";
+      linkField.type = "url";
+      linkField.readOnly = true;
+      linkField.hidden = true;
+      linkField.value = url;
+      linkField.setAttribute("aria-label", "Skaičiuoklės nuoroda");
+      const copyLink = makeButton("Kopijuoti skaičiuoklės nuorodą");
+      copyLink.addEventListener("click", () => copyText(linkField, status, "Skaičiuoklės nuoroda nukopijuota."));
+      const facebook = document.createElement("a");
+      facebook.className = "secondary-button";
+      facebook.href = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url);
+      facebook.target = "_blank";
+      facebook.rel = "noopener noreferrer";
+      facebook.textContent = "Dalytis „Facebook“";
+      actions.append(copyLink, facebook);
+      section.append(linkField);
+    }
+    actions.append(copySummary);
+    section.append(actions, summary, status);
+    return section;
   }
 
   function open(data) {
@@ -617,7 +661,7 @@
     });
     dialog.append(
       makeParagraph("PDF failui pasirink „Spausdinti arba išsaugoti PDF“, tada spausdinimo lange pasirink PDF formatą."),
-      actions, status, copy, preview,
+      actions, status, reportSharing(data), copy, preview,
     );
     document.body.append(printCopy);
     show();

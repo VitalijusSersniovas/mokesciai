@@ -150,12 +150,19 @@ function readIncome() {
         showError(higher ? element("disability-higher") : element("disability-lower"), "Kai taikomas didesnis NPD dėl negalios ir pajamos viršija 126 532,80 €, įvesk faktines 2025 m. sumas režime „Jau sumokėti mokesčiai“.");
       }
       const amounts = wageTaxes(gross, 0, higher, lower, gross, pensionRate);
-      return { ...amounts, fromNet: isNet, npd, gross: toCents(gross), caption: isNet ? "Atlyginimas · įvertis iš sumos į rankas" : "Atlyginimas · metinė prievolė" };
+      return {
+        ...amounts,
+        fromNet: isNet,
+        enteredNet: isNet ? toCents(annual) : null,
+        npd,
+        gross: toCents(gross),
+        caption: isNet ? "Atlyginimas · įvertis iš sumos į rankas" : "Atlyginimas · metinė prievolė",
+      };
     }
     case "dividends": {
       const gross = readMoney("dividend", true);
       const amounts = wageTaxes(0, gross);
-      return { tax: amounts.dividend, vsd: 0, psd: 0, caption: "Dividendai · metinė GPM prievolė" };
+      return { tax: amounts.dividend, vsd: 0, psd: 0, gross: toCents(gross), caption: "Dividendai · metinė GPM prievolė" };
     }
     case "pension": {
       const amount = readField(element("pension-income"), { decimals: 2 });
@@ -170,6 +177,7 @@ function readIncome() {
       const carriedLoss = readMoney("self-loss");
       return {
         ...selfEmploymentTaxes(income, expenses, months, element("self-vsd-exempt").checked, carriedLoss),
+        gross: toCents(income),
         caption: "Individuali veikla pagal pažymą · metinė prievolė",
       };
     }
@@ -525,12 +533,39 @@ function wageEquivalent(total) {
   return { months, label: value + " mėn." };
 }
 
+function renderAnnualIncome() {
+  const before = result.pensionIncome ?? result.gross ?? null;
+  element("annual-income").hidden = before === null;
+  if (before === null) return;
+
+  const after = before - result.tax - result.vsd - result.psd;
+  let note = "";
+  if (result.mode === "wages") {
+    note = "Atskaičiuoti GPM, VSD ir PSD pagal metinę prievolę.";
+    if (result.fromNet && result.enteredNet !== after) {
+      note += " Pagal įvestį gauta į rankas per metus – " + money(result.enteredNet) + ".";
+    }
+    if (result.pension) note += " II pakopos įmoka apskaičiuota atskirai.";
+  } else if (result.mode === "self") {
+    note = "Abi sumos pateiktos prieš veiklos išlaidas. Skirtumą sudaro GPM, VSD ir PSD.";
+  } else if (result.mode === "dividends") {
+    note = "Atskaičiuotas dividendų GPM.";
+  }
+
+  element("annual-income-before").textContent = money(before);
+  element("annual-income-after").textContent = money(after);
+  const incomeNote = element("annual-income-note");
+  incomeNote.textContent = note;
+  incomeNote.hidden = !note;
+}
+
 function renderResult(announce = false) {
   const { lines, total, gpm, vsd, psd } = annualTotals();
   const caveats = purchaseCaveats();
   const automatic = isEstimatedIncome();
   element("result-heading").textContent = automatic ? "Apskaičiuota mokesčių ir įmokų suma" : "Mokesčių ir įmokų suma pagal įvestį";
   element("total-amount").textContent = money(total);
+  renderAnnualIncome();
   const equivalent = wageEquivalent(total);
   element("wage-equivalent").hidden = equivalent === null;
   if (equivalent) {
@@ -547,7 +582,7 @@ function renderResult(announce = false) {
     : "2025 m. tarifai. Kai taikomi abu GPM tarifai, šiame modelyje metinis NPD priskiriamas proporcingai.";
   element("wage-estimate").textContent = wageEstimate();
   element("wage-estimate").hidden = !result.fromNet;
-  element("amount-kind").textContent = result.mode === "pension" ? pensionNote() : automatic
+  element("amount-kind").textContent = result.mode === "pension" ? pensionTaxNote : automatic
     ? "Pajamų dalis rodo preliminarią metinę prievolę prieš avansų ir išskaičiuotų sumų užskaitymą. Pirkinių mokesčiai apskaičiuoti pagal tavo duomenis."
     : "Suvestinė pagal įvestas sumas ir apskaičiuotus pirkinių mokesčius.";
   element("result-caption").textContent = result.caption + " · metinė suma";

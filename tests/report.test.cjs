@@ -151,9 +151,9 @@ test('report dialog gives a direct HTML download and a separate print document',
   assert.equal(images.length, 2);
   const preview = dialog.find((element) => element.tag === 'article');
   assert.match(preview.innerHTML, /src="\.\/media\/palyginimai-maistas\.webp"/u);
-  const comparisonDates = /2025 m\. mokesčių ir įmokų suma bei kortelėje nurodyta kaina su mokesčiais\. Kainų šaltiniai patikrinti 2026-11-19\./u;
+  const comparisonDates = /2025 m\. mokesčių ir įmokų suma bei kortelėje nurodyta kaina su mokesčiais\. Paskutinė kainos šaltinio patikra 2026-11-19\./u;
   assert.match(preview.innerHTML, comparisonDates);
-  assert.match(dialog.find((element) => element.tag === 'textarea').value, comparisonDates);
+  assert.match(dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value, comparisonDates);
   images.forEach((image) => image.onload());
   await new Promise(setImmediate);
   assert.equal(download.href, 'blob:test/report');
@@ -267,7 +267,7 @@ test('spending groups use projected amounts and expand for print and for downloa
   assert.doesNotMatch(preview.innerHTML, /<span>Gynyba<\/span>/u);
   assert.match(preview.innerHTML, /href="https:\/\/example.org\/islaidos"[^>]*>Eurostatas<\/a>/u);
   assert.match(printCopy.innerHTML, /<details class="tax-report-spending-group" open>/u);
-  const text = dialog.find((element) => element.tag === 'textarea').value;
+  const text = dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value;
   assert.match(text, /Išlaidų papunkčiai\nĮvertis apskaičiuotas pagal 2024 m\. faktines Lietuvos valdžios sektoriaus išlaidų proporcijas\.\nŠvietimas · 14,60 €\n  Aukštasis mokslas · 5,20 € \(Universitetai ir <kolegijos>\)/u);
   assert.equal(text.split('Švietimas · 14,60 €').length, 2);
   assert.match(text, /<Kitas papunktis> · 9,40 €/u);
@@ -302,7 +302,7 @@ test('full reports keep tax totals and omit the PSD purpose section', async () =
     assert.match(html, /<th scope="row">PSD<\/th><td>0,10 €<\/td>/u);
     assert.doesNotMatch(html, /PSD įmokos paskirtis|Į bendrą sumą įskaičiuota PSD įmoka|Draudimo paskirtis/u);
   }
-  const text = dialog.find((element) => element.tag === 'textarea').value;
+  const text = dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value;
   assert.match(text, /PSD · 0,10 €/u);
   assert.doesNotMatch(text, /PSD įmokos paskirtis|Į bendrą sumą įskaičiuota PSD įmoka/u);
 });
@@ -330,6 +330,24 @@ test('summary stays manually selectable if clipboard and device sharing fail', a
   assert.match(status.textContent, /Tekstas pažymėtas/u);
 });
 
+test('the report shares a clean calculator link separately from the tax summary', async () => {
+  const copied = [];
+  const { document, report } = setup({ clipboard: { async writeText(text) { copied.push(text); } } });
+  const url = 'https://example.org/mokesciai/';
+  document.querySelector = () => ({ href: url });
+  report.open({ ...data, url, comparison: null });
+  const dialog = document.body.find((element) => element.tag === 'dialog');
+  const section = dialog.find((element) => element.className === 'tax-export-share');
+  assert.equal(section.find((element) => element.tag === 'h3').textContent, 'Pasidalyti su draugu');
+  const facebook = section.find((element) => element.tag === 'a');
+  assert.equal(new URL(facebook.href).searchParams.get('u'), url);
+  await section.find((element) => element.textContent === 'Kopijuoti skaičiuoklės nuorodą').click();
+  await section.find((element) => element.textContent === 'Kopijuoti mokesčių suvestinę').click();
+  assert.equal(copied[0], url);
+  assert.match(copied[1], /GPM · 67,50 €/u);
+  assert.doesNotMatch(copied[1], /Privati informacija|secret|Pienas|Aukštasis mokslas/u);
+});
+
 test('calculation caveat accompanies the result in the preview, PDF, HTML and sharing text', async () => {
   const { document, report, files } = setup();
   const caveat = 'Daliai pirkinių PVM neapskaičiuotas. Cigarečių akcizas rodomas kaip apatinė riba. <Pastaba>';
@@ -343,7 +361,7 @@ test('calculation caveat accompanies the result in the preview, PDF, HTML and sh
     assert.doesNotMatch(markup, /<Pastaba>/u);
     assert.ok(markup.indexOf('apatinė riba') < markup.indexOf('Metiniai mokesčiai ir draudimo įmokos'));
   }
-  const fullText = dialog.find((element) => element.tag === 'textarea').value;
+  const fullText = dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value;
   assert.ok(fullText.includes('Skaičiavimo pastaba. ' + caveat));
   await dialog.close();
 

@@ -75,7 +75,7 @@ test('PNG card maps product photos and only shows public comparison data', async
   for (const value of ['PAVYZDYS', '100,00 €', 'Metinė suma · 2025 m.', 'example.org', '63,6 l', 'Vitalijus Šeršniovas, skaičiuoklės iniciatorius']) {
     assert.ok(drawnText.includes(value));
   }
-  assert.ok(drawnText.includes('Iliustraciniai palyginimai. Kainų šaltiniai patikrinti 2026-11-19.'));
+  assert.ok(drawnText.includes('Iliustraciniai palyginimai. Paskutinė kainos šaltinio patikra 2026-11-19.'));
   assert.doesNotMatch(drawnText.join('\n'), /private|salary|secret|Never share|Internetas/);
 });
 

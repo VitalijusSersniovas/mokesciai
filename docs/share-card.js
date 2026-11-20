@@ -170,7 +170,7 @@
     if (caveat) drawCaveat(context, caveat);
     const footerOffset = caveat?.offset ?? 0;
     const priceNote = comparison.priceChecked
-      ? `Iliustraciniai palyginimai. Kainų šaltiniai patikrinti ${comparison.priceChecked}.`
+      ? `Iliustraciniai palyginimai. Paskutinė kainos šaltinio patikra ${comparison.priceChecked}.`
       : "Iliustraciniai palyginimai pagal nurodytas kainas.";
     type(context, priceNote, x, 1201 + footerOffset, 22, colors.muted, { weight: 500, maxWidth: width });
     context.strokeStyle = colors.border;

@@ -1,6 +1,7 @@
 "use strict";
 
-const comparisonPriceChecked = "2026-11-19";
+const comparisonPriceChecked = "2026-11-20";
+const earlierRetailPriceCheck = "2026-11-19";
 
 const monthlyRetailSource = {
   name: "Valstybės duomenų agentūra",
@@ -28,32 +29,36 @@ const referencePrices = [
   { photo: 4, label: "Elektra", detail: "Visuomeninis tiekimas, vienos zonos planas „Standartinis“", type: "Energija", cents: 24, unit: "kWh", source: electricityPriceSource },
   { photo: 3, label: "Dyzelinas", type: "Degalai", cents: 218.1, unit: "l", source: fuelPriceSource },
   { photo: 5, label: "Danties plombavimas", detail: "Viena helio plomba", type: "Sveikata", cents: 8370, unit: "vnt.", whole: true, source: monthlyRetailSource },
+  {
+    photo: 7, label: "Apple MacBook Air", detail: "13,6″, M5, 16 GB RAM, 512 GB SSD, sidabrinis (MDH74ZE/A)", type: "Technika", cents: 139900, unit: "vnt.", whole: true,
+    source: { name: "RDE.LT", kind: "Pardavėjo internetinė kaina su PVM", date: comparisonPriceChecked, url: "https://www.rde.lt/products/lt/150/1660505/sort/5/filter/0_0_0_0/MacBook-Air-13-6-Retina-M5-16GB-512SSD-EN-sidabrinis-MDH74ZE-A-ne%C5%A1iojamas-kompiuteris.html" },
+  },
   { photo: 3, label: "Benzinas", type: "Degalai", cents: 174.4, unit: "l", source: fuelPriceSource },
   { photo: 0, label: "Bulvės", type: "Maistas", cents: 64, unit: "kg", source: monthlyRetailSource },
   { photo: 1, label: "Kiaulienos nugarinė", detail: "Be kaulo", type: "Maistas", cents: 484, unit: "kg", source: monthlyRetailSource },
   {
     photo: 9, label: "Skalbyklė", detail: "„Beko BM3WFSU37213WPBB“, 7 kg", type: "Buitis", cents: 32900, unit: "vnt.", whole: true,
-    source: { name: "„Senukai“", kind: "Pardavėjo internetinė kaina be lojalumo nuolaidos", date: comparisonPriceChecked, url: "https://www.senukai.lt/p/skalbimo-masina-beko-bm3wfsu37213wpbb-7-kg-balta-sp/xqtq" },
+    source: { name: "„Senukai“", kind: "Pardavėjo internetinė kaina be lojalumo nuolaidos", date: earlierRetailPriceCheck, url: "https://www.senukai.lt/p/skalbimo-masina-beko-bm3wfsu37213wpbb-7-kg-balta-sp/xqtq" },
   },
   {
     photo: 12, label: "Išmanusis telefonas", detail: "„Samsung Galaxy A17 LTE“, 128 GB", type: "Technika", cents: 19999, unit: "vnt.", whole: true,
-    source: { name: "„Elesen“", kind: "Pardavėjo internetinė kaina be lojalumo nuolaidos", date: comparisonPriceChecked, url: "https://www.elesen.lt/telefonai/mobilieji-telefonai/mobilieji-telefonai/sm-a175fzkbeue/samsung-galaxy-a17-lte-128gb-juodas-ismanusis-telefonas" },
+    source: { name: "„Elesen“", kind: "Pardavėjo internetinė kaina be lojalumo nuolaidos", date: earlierRetailPriceCheck, url: "https://www.elesen.lt/telefonai/mobilieji-telefonai/mobilieji-telefonai/sm-a175fzkbeue/samsung-galaxy-a17-lte-128gb-juodas-ismanusis-telefonas" },
   },
   {
     photo: 13, label: "Namų internetas", detail: "INIT MIDI iki 100 Mb/s", type: "Ryšys", cents: 1270, unit: "mėn.",
-    source: { name: "INIT", kind: "Neterminuotos sutarties mėnesio mokestis, vienkartiniai mokesčiai atskirai", date: comparisonPriceChecked, url: "https://init.lt/internetas/sviesolaidinis-internetas/" },
+    source: { name: "INIT", kind: "Neterminuotos sutarties mėnesio mokestis, vienkartiniai mokesčiai atskirai", date: earlierRetailPriceCheck, url: "https://init.lt/internetas/sviesolaidinis-internetas/" },
   },
   {
     photo: 10, label: "Žieminiai batai", detail: "Juodi „AM Shoe“ auliniai", type: "Avalynė", cents: 7499, unit: "poros", whole: true,
-    source: { name: "„Deichmann“", kind: "Pardavėjo internetinė kaina su PVM", date: comparisonPriceChecked, url: "https://www.deichmann.com/lt-lt/p/am-shoe-zieminiai-auliniai-juoda-163401" },
+    source: { name: "„Deichmann“", kind: "Pardavėjo internetinė kaina su PVM", date: earlierRetailPriceCheck, url: "https://www.deichmann.com/lt-lt/p/am-shoe-zieminiai-auliniai-juoda-163401" },
   },
   {
     photo: 11, label: "Gedimino pilies bokšto bilietas", detail: "Bilietas suaugusiajam", type: "Kultūra", cents: 800, unit: "vnt.", whole: true,
-    source: { name: "Lietuvos nacionalinis muziejus", kind: "Pilna bilieto kaina Vilniuje", date: comparisonPriceChecked, url: "https://lnm.lt/muziejai/gedimino-pilies-bokstas/" },
+    source: { name: "Lietuvos nacionalinis muziejus", kind: "Pilna bilieto kaina Vilniuje", date: earlierRetailPriceCheck, url: "https://lnm.lt/muziejai/gedimino-pilies-bokstas/" },
   },
   {
     photo: 6, label: "iPhone 17", detail: "256 GB, juodas", type: "Technika", cents: 114900, unit: "vnt.", whole: true,
-    source: { name: "„Elesen“", kind: "Pardavėjo internetinė kaina", date: comparisonPriceChecked, url: "https://www.elesen.lt/telefonai/mobilieji-telefonai/mobilieji-telefonai/mg6j4hxfsa/apple-iphone-17-256-gb-juodas-ismanusis-telefonas" },
+    source: { name: "„Elesen“", kind: "Pardavėjo internetinė kaina", date: earlierRetailPriceCheck, url: "https://www.elesen.lt/telefonai/mobilieji-telefonai/mobilieji-telefonai/mg6j4hxfsa/apple-iphone-17-256-gb-juodas-ismanusis-telefonas" },
   },
 ];
 

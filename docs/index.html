@@ -19,17 +19,17 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#f5f5ef">
   <title>Kur keliauja tavo mokesčiai?</title>
-  <link rel="stylesheet" href="./styles.css?v=monthly-20261120">
+  <link rel="stylesheet" href="./styles.css?v=annual-income-20261120">
   <script src="./tax-model.js?v=wage-equivalent-20261120" defer></script>
   <script src="./spending-data.js" defer></script>
   <script src="./insurance-spending.js" defer></script>
   <script src="./purchases.js?v=monthly-20261120" defer></script>
-  <script src="./report.js?v=wage-equivalent-20261120" defer></script>
-  <script src="./comparison.js" defer></script>
-  <script src="./share-card.js" defer></script>
+  <script src="./report.js?v=friend-20261120" defer></script>
+  <script src="./comparison.js?v=macbook-20261120" defer></script>
+  <script src="./share-card.js?v=macbook-20261120" defer></script>
   <script src="./sharing.js" defer></script>
   <script src="./defence-fund.js" defer></script>
-  <script src="./calculator.js?v=wage-equivalent-20261120" defer></script>
+  <script src="./calculator.js?v=annual-income-20261120" defer></script>
 </head>
 <body>
   <a class="skip" href="#skaiciuokle">Pereiti prie skaičiuoklės</a>
@@ -270,6 +270,14 @@
           <p class="result-message stale-message" id="stale-result" hidden>Duomenys pakeisti. Rodomas paskutinis skaičiavimas.</p>
           <p class="result-message" id="amount-kind"></p>
           <p class="result-message" id="wage-estimate" hidden></p>
+          <section class="annual-income" id="annual-income" aria-labelledby="annual-income-heading" hidden>
+            <h3 id="annual-income-heading">Metinės pajamos</h3>
+            <dl>
+              <div><dt>Pajamos prieš mokesčius</dt><dd id="annual-income-before"></dd></div>
+              <div><dt>Pajamos atskaičius mokesčius</dt><dd id="annual-income-after"></dd></div>
+            </dl>
+            <p class="field-help" id="annual-income-note" hidden></p>
+          </section>
           <p class="result-message warning-message" id="result-warning" hidden></p>
           <div class="wage-equivalent" id="wage-equivalent" hidden>
             <h3>Kiek jūsų atlyginimų sudaro per metus sumokėtų mokesčių?</h3>
@@ -315,7 +323,7 @@
         <div>
           <div class="section-kicker">Perkamosios galios palyginimas</div>
           <h2 id="comparison-heading" tabindex="-1">Ką už šią sumą galima įsigyti?</h2>
-          <p>Kiekvienam palyginimui naudojama visa 2025 m. mokesčių ir įmokų suma bei nurodyta 2026 m. kaina su mokesčiais. Kainų šaltiniai patikrinti <time id="comparison-checked" datetime="2026-11-19">2026-11-19</time>.</p>
+          <p>Kiekvienam palyginimui naudojama visa 2025 m. mokesčių ir įmokų suma bei nurodyta 2026 m. kaina su mokesčiais. Paskutinė kainos šaltinio patikra <time id="comparison-checked" datetime="2026-11-20">2026-11-20</time>.</p>
         </div>
         <div class="comparison-basis">
           <strong id="comparison-total">—</strong>
@@ -482,6 +490,22 @@
             </div>
           </div>
         </details>
+      </div>
+    </section>
+
+    <section class="comparison paper" id="lrt-finansavimas" aria-labelledby="lrt-heading">
+      <div class="comparison-header">
+        <div>
+          <div class="section-kicker">2025 m. valstybės biudžetas</div>
+          <h2 id="lrt-heading">LRT finansavimas vienam gyventojui</h2>
+          <p>Vidutiniškai <strong>27,57 € per metus</strong>, arba <strong>2,30 € per mėnesį</strong>.</p>
+        </div>
+      </div>
+      <p class="field-help">2025 m. LRT gautus 79 641 982,57 € padalijome iš vidutinio nuolatinių gyventojų skaičiaus (2 889 128). Tų metų asignavimų dydis buvo apskaičiuotas pagal 2023 m. šalies GPM ir akcizų įplaukas. Asmeninio įnašo iš įvestų mokesčių nustatyti negalima.</p>
+      <div class="source-links">
+        <a href="https://apie.lrt.lt/api/uploads/BVA_su_audito_isvada_2025_500f22d407.pdf#page=4">LRT · 2025 m. biudžeto vykdymo ataskaita</a>
+        <a href="https://dgs-p.eige.europa.eu/data/view?code=ta_demigr_dem_pop_bal__demo_gind">Eurostatas per EIGE · Vidutinis gyventojų skaičius</a>
+        <a href="https://apie.lrt.lt/api/uploads/LRT_ataskaita_2025_full_WEB_3bc8c744e0.pdf#page=96">LRT · 2025 m. finansavimo tvarka</a>
       </div>
     </section>
 
