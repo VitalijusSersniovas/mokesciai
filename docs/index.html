@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Apskaičiuok savo mokesčius ir įmokas. Pamatyk, kiek šios sumos tektų mokykloms, sveikatai, gynybai ir kitoms sritims.">
+  <link rel="canonical" href="https://vitalijussersniovas.github.io/mokesciai/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="lt_LT">
+  <meta property="og:site_name" content="Mano mokesčių euras">
+  <meta property="og:title" content="Kur keliauja tavo mokesčiai?">
+  <meta property="og:description" content="Apskaičiuok savo mokesčius ir įmokas. Pamatyk, kiek šios sumos tektų mokykloms, sveikatai, gynybai ir kitoms sritims.">
+  <meta property="og:url" content="https://vitalijussersniovas.github.io/mokesciai/">
+  <meta property="og:image" content="https://vitalijussersniovas.github.io/mokesciai/media/dalijimosi-vaizdas-v4.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Kur keliauja tavo mokesčiai? Kvitas, monetos ir išlaidų diagrama.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#f5f5ef">
+  <title>Kur keliauja tavo mokesčiai?</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./tax-model.js" defer></script>
+  <script src="./spending-data.js" defer></script>
+  <script src="./insurance-spending.js" defer></script>
+  <script src="./purchases.js" defer></script>
+  <script src="./report.js" defer></script>
+  <script src="./comparison.js" defer></script>
+  <script src="./share-card.js" defer></script>
+  <script src="./sharing.js" defer></script>
+  <script src="./defence-fund.js" defer></script>
+  <script src="./calculator.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#skaiciuokle">Pereiti prie skaičiuoklės</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="wordmark" href="#" aria-label="Mano mokesčių euras, pradžia">
+        <span class="brand-icon" aria-hidden="true">€</span><span>Mano mokesčių euras</span>
+      </a>
+      <nav aria-label="Puslapio navigacija">
+        <a href="#skaiciuokle">Skaičiuoklė</a>
+        <a href="#dalintis">Dalytis</a>
+        <a class="nav-method" href="#metodika">Metodika</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero" aria-labelledby="main-title">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="flag" aria-hidden="true"></span> Lietuvos mokesčių skaičiuoklė</div>
+        <h1 id="main-title">Kur keliauja<br>tavo <em>mokesčiai?</em></h1>
+        <p>Apskaičiuok savo mokesčius ir įmokas. Pamatyk, kaip ši suma pasiskirstytų pagal viešųjų išlaidų sritis ir ką už ją galėtum įsigyti pagal naujausias patikrintas kainas.</p>
+        <a class="hero-cta" href="#skaiciuokle">Skaičiuoti savo mokesčius <span aria-hidden="true">↓</span></a>
+      </div>
+      <aside class="initiative-card" aria-labelledby="initiative-name">
+        <img class="initiative-photo" src="./media/vitalijus-sersniovas.webp" width="384" height="576" alt="" decoding="async">
+        <div class="initiative-copy">
+          <div class="initiative-label">Skaičiuoklės iniciatorius</div>
+          <h2 id="initiative-name">Vitalijus Šeršniovas</h2>
+          <p>Seimo narys, išrinktas Utenos apygardoje</p>
+          <a href="https://www.lrs.lt/sip/portal.show?p_a=498&amp;p_asm_id=90913&amp;p_k=1&amp;p_kade_id=10&amp;p_r=35299">Veikla Seime <span aria-hidden="true">→</span></a>
+        </div>
+      </aside>
+    </section>
+
+    <section class="public-share" id="dalintis" aria-labelledby="public-share-heading">
+      <div class="public-share-copy">
+        <h2 id="public-share-heading">Nusiųsk skaičiuoklę draugui</h2>
+        <p>Nuoroda atveria skaičiuoklę. Įvestos sumos ir rezultatai lieka tavo naršyklėje.</p>
+      </div>
+      <div class="public-share-actions">
+        <a class="secondary-button facebook-share" id="facebook-share" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fvitalijussersniovas.github.io%2Fmokesciai%2F" target="_blank" rel="noopener noreferrer">Dalytis „Facebook“</a>
+        <button class="secondary-button" id="copy-site-link" type="button">Kopijuoti nuorodą</button>
+        <a class="comparison-action-link" id="email-site-link" href="mailto:?subject=Kur%20keliauja%20tavo%20mokes%C4%8Diai%3F&amp;body=https%3A%2F%2Fvitalijussersniovas.github.io%2Fmokesciai%2F">Siųsti el. paštu</a>
+      </div>
+      <div class="site-link-field" id="site-link-field" hidden>
+        <label for="site-link-value">Skaičiuoklės nuoroda</label>
+        <input id="site-link-value" type="url" readonly value="https://vitalijussersniovas.github.io/mokesciai/">
+      </div>
+      <p id="site-share-status" class="field-help share-feedback" role="status"></p>
+    </section>
+
+    <div class="workspace" id="skaiciuokle">
+      <form id="tax-form" novalidate>
+        <section class="input-card paper" aria-labelledby="income-heading">
+          <div class="section-kicker">2025 m. pajamos</div>
+          <h2 id="income-heading">Pajamos ir įmokos</h2>
+          <div class="field income-choice">
+            <label for="income-mode">Ką nori apskaičiuoti?</label>
+            <select id="income-mode" aria-controls="wages-panel pension-panel dividends-panel self-panel paid-panel">
+              <option value="wages">Atlyginimas</option>
+              <option value="pension">Pensija („Sodros“ arba valstybinė)</option>
+              <option value="dividends">Dividendai</option>
+              <option value="self">Individuali veikla pagal pažymą</option>
+              <option value="paid">Jau sumokėti mokesčiai</option>
+              <option value="none">Tik pirkinių mokesčiai</option>
+            </select>
+          </div>
+
+          <div id="wages-panel">
+            <div class="field wage-basis-field">
+              <label for="wage-basis">Kokią atlyginimo sumą žinai?</label>
+              <select id="wage-basis">
+                <option value="gross">Ant popieriaus</option>
+                <option value="net">Į rankas</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="wages" id="wages-label">Atlyginimas ant popieriaus</label>
+              <div class="wage-fields">
+                <div class="money-field"><input id="wages" inputmode="decimal" autocomplete="off" value="2000" aria-describedby="wage-help"><span aria-hidden="true">€</span></div>
+                <select id="wage-period" aria-label="Atlyginimo laikotarpis">
+                  <option value="month">Per mėnesį</option>
+                  <option value="year">Per metus</option>
+                </select>
+              </div>
+              <p class="field-help" id="wage-help">Įvesk 2025 m. mėnesio vidurkį arba metinę sumą su premijomis.</p>
+            </div>
+            <div class="field block-field" id="wage-npd-field" hidden>
+              <label for="wage-npd">Ar darbdavys taikė NPD?</label>
+              <select id="wage-npd" aria-describedby="wage-npd-help">
+                <option value="unknown">Nežinau</option>
+                <option value="yes">Taikė visą laikotarpį</option>
+                <option value="no">Netaikė</option>
+              </select>
+              <p class="field-help" id="wage-npd-help">Jei nežinai, skaičiuojame su įprastai taikomu metiniu NPD. Jei NPD keitėsi, tikslesniam įverčiui naudok algalapyje nurodytą sumą ant popieriaus.</p>
+            </div>
+            <label class="check-field" id="wage-pension-field" hidden><input type="checkbox" id="wage-pension"> Nuo atlyginimo buvo išskaičiuojama 3 % įmoka į II pensijų pakopą</label>
+            <details class="field-details">
+              <summary><span class="details-icon" aria-hidden="true">+</span> Šeima ir negalia</summary>
+              <p class="field-help">Vien santuoka ar vaikų skaičius 2025 m. metinio NPD nekeičia. Dėl negalios gali būti taikomas didesnis NPD.</p>
+              <p class="field-help" id="disability-help">Įvesk mėnesius, už kuriuos priklausė didesnis NPD dėl negalios. Teisė paprastai pradedama taikyti nuo kito mėnesio. Abiejų kategorijų suma iki 12 mėnesių.</p>
+              <div class="paired">
+                <div class="field">
+                  <label for="disability-higher">0–25 % dalyvumas arba sunki negalia</label>
+                  <div class="money-field unit-months"><input id="disability-higher" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="disability-help"><span aria-hidden="true">mėn.</span></div>
+                </div>
+                <div class="field">
+                  <label for="disability-lower">30–55 % dalyvumas arba vidutinė ar lengva negalia</label>
+                  <div class="money-field unit-months"><input id="disability-lower" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="disability-help"><span aria-hidden="true">mėn.</span></div>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <div id="pension-panel" hidden>
+            <div class="field">
+              <label for="pension-income">Gauta pensija (nebūtina)</label>
+              <div class="wage-fields">
+                <div class="money-field"><input id="pension-income" inputmode="decimal" autocomplete="off" placeholder="Pvz., 650" aria-describedby="pension-help"><span aria-hidden="true">€</span></div>
+                <select id="pension-period" aria-label="Pensijos laikotarpis">
+                  <option value="month">Per mėnesį</option>
+                  <option value="year">Per metus</option>
+                </select>
+              </div>
+              <p class="field-help" id="pension-help">Pasirink šį skaičiavimą, jei gauni „Sodros“ ar Lietuvos valstybinę pensiją. Jei taip pat dirbi, atlyginimo mokesčiams rinkis „Atlyginimas“.</p>
+            </div>
+          </div>
+
+          <div id="dividends-panel" hidden>
+            <div class="field">
+              <label for="dividend">2025 m. Lietuvos įmonių dividendai prieš GPM</label>
+              <div class="money-field"><input id="dividend" inputmode="decimal" autocomplete="off" placeholder="0" aria-describedby="dividend-help"><span aria-hidden="true">€</span></div>
+              <p class="field-help" id="dividend-help">Dividendams taikomas 15 % GPM. Jei gavai ir atlyginimą, dividendai gali sumažinti jo metinį NPD. Bendrai suvestinei gali įvesti faktines sumas režime „Jau sumokėti mokesčiai“.</p>
+            </div>
+          </div>
+
+          <div id="self-panel" hidden>
+            <p class="field-help mode-help">Šis režimas skirtas įprastai veiklai pagal pažymą, kai nėra kitų pajamų. Mišrioms pajamoms, žemės ūkiui ir verslo liudijimui rinkis jau sumokėtų mokesčių režimą.</p>
+            <div class="field">
+              <label for="self-income">Veiklos pajamos per metus be pardavimo PVM</label>
+              <div class="money-field"><input id="self-income" inputmode="decimal" autocomplete="off" placeholder="0"><span aria-hidden="true">€</span></div>
+            </div>
+            <div class="field block-field">
+              <label for="self-expense-mode">Išlaidų būdas</label>
+              <select id="self-expense-mode" aria-controls="self-actual-panel">
+                <option value="flat">30 % nuo pajamų</option>
+                <option value="actual">Pagrįstos faktinės išlaidos</option>
+              </select>
+              <p class="field-help">30 % būdas taikomas laikantis VMI sąlygų. Pavyzdžiui, jis netaikomas, jei dalį veiklos pajamų gavai iš darbdavio.</p>
+            </div>
+            <div id="self-actual-panel" class="field block-field" hidden>
+              <label for="self-expense">Veiklos išlaidos be VSD, PSD ir atskaitomo PVM</label>
+              <div class="money-field"><input id="self-expense" inputmode="decimal" autocomplete="off" placeholder="0"><span aria-hidden="true">€</span></div>
+            </div>
+            <details class="field-details">
+              <summary><span class="details-icon" aria-hidden="true">+</span> Ankstesnių metų mokestiniai nuostoliai</summary>
+              <div class="field">
+                <label for="self-loss">Leidžiami perkelti individualios veiklos nuostoliai</label>
+                <div class="money-field"><input id="self-loss" inputmode="decimal" autocomplete="off" aria-describedby="self-loss-help"><span aria-hidden="true">€</span></div>
+                <p class="field-help" id="self-loss-help">Jei taikai kaupimo apskaitos principą, įrašyk į 2025 m. GPM311 deklaraciją perkeltiną nuostolių sumą.</p>
+              </div>
+            </details>
+            <details class="field-details">
+              <summary><span class="details-icon" aria-hidden="true">+</span> PSD minimumas ir VSD išimtis</summary>
+              <div class="field">
+                <label for="self-psd-months">Mėnesiai, kai privalėjai mokėti minimalų PSD</label>
+                <div class="money-field unit-months"><input id="self-psd-months" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="self-psd-help"><span aria-hidden="true">mėn.</span></div>
+                <p id="self-psd-help" class="field-help">Jei visus metus buvai draudžiamas kitu pagrindu, įvesk 0. Vienas iš tėvų, auginantis vaiką iki 8 m. arba bent du nepilnamečius vaikus, gali būti draudžiamas valstybės lėšomis. PSD nuo veiklos pelno paprastai skaičiuojamas ir tokiu atveju.</p>
+              </div>
+              <label class="check-field"><input type="checkbox" id="self-vsd-exempt"> VSD išimtis taikyta visoms mano 2025 m. veiklos pajamoms</label>
+              <p class="field-help">Jei išimtis taikyta tik daliai pajamų, įvesk faktiškai sumokėtas sumas.</p>
+            </details>
+          </div>
+
+          <div id="paid-panel" hidden>
+            <p class="field-help mode-help">Įvesk Lietuvoje sumokėtas sumas už 2025 m. mokestinį laikotarpį, įskaitant vėliau sumokėtą likutį. Pirkinių PVM ir akcizams naudok pirkinių skiltį.</p>
+            <div class="field">
+              <label for="paid-tax">GPM ir kiti mokesčiai, išskyrus VSD, PSD, pirkinių PVM ir akcizus</label>
+              <div class="money-field"><input id="paid-tax" inputmode="decimal" autocomplete="off" placeholder="0"><span aria-hidden="true">€</span></div>
+            </div>
+            <div class="paired">
+              <div class="field">
+                <label for="paid-vsd">VSD per metus</label>
+                <div class="money-field"><input id="paid-vsd" inputmode="decimal" autocomplete="off" placeholder="0"><span aria-hidden="true">€</span></div>
+              </div>
+              <div class="field">
+                <label for="paid-psd">PSD per metus</label>
+                <div class="money-field"><input id="paid-psd" inputmode="decimal" autocomplete="off" placeholder="0"><span aria-hidden="true">€</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="input-card buying-card paper" id="pirkiniai" aria-labelledby="buying-heading">
+          <div class="section-kicker">2025 m. pirkiniai</div>
+          <h2 id="buying-heading">PVM ir akcizai</h2>
+          <p class="field-help buying-description">Prekėms įvesk savaitės išlaidas arba kiekį. Namų ūkio paslaugoms tinka mėnesio vidurkis arba visa 2025 m. suma.</p>
+          <div id="purchase-list"></div>
+          <button id="add-purchase" class="secondary-button add-purchase" type="button"><span aria-hidden="true">+</span> Pridėti prekę ar paslaugą</button>
+
+          <details class="field-details">
+            <summary><span class="details-icon" aria-hidden="true">+</span> Kiti pirkiniai</summary>
+            <p class="field-help" id="vat-help">Įvesk, kiek per savaitę vidutiniškai išleisdavai kitiems pirkiniams su PVM. Išlaidas sugrupuok pagal čekyje nurodytą PVM tarifą. Šios sumos neturėtų apimti atskirai įvestų pirkinių ir taros užstato.</p>
+            <div class="vat-grid">
+              <div class="field">
+                <label for="vat-standard">21 % · per savaitę</label>
+                <div class="money-field"><input id="vat-standard" inputmode="decimal" autocomplete="off" placeholder="Pvz., 50" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
+              </div>
+              <div class="field">
+                <label for="vat-9">9 % · per savaitę</label>
+                <div class="money-field"><input id="vat-9" inputmode="decimal" autocomplete="off" placeholder="Pvz., 20" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
+              </div>
+              <div class="field">
+                <label for="vat-5">5 % · per savaitę</label>
+                <div class="money-field"><input id="vat-5" inputmode="decimal" autocomplete="off" placeholder="Pvz., 10" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
+              </div>
+            </div>
+            <details class="field-details">
+              <summary><span class="details-icon" aria-hidden="true">+</span> Įvesti atskiras prekes</summary>
+              <div id="other-purchase-list"></div>
+              <button id="add-other-purchase" class="secondary-button add-purchase" type="button">Pridėti atskirą prekę</button>
+            </details>
+          </details>
+        </section>
+
+        <div class="compute-actions">
+          <p id="form-error" class="error" role="alert" hidden></p>
+          <button class="calculate" type="submit">Apskaičiuoti <span aria-hidden="true">→</span></button>
+          <p class="privacy"><span class="lock" aria-hidden="true"></span><span>Įvestos sumos apdorojamos tavo naršyklėje.</span></p>
+        </div>
+      </form>
+
+      <section class="result-card" aria-labelledby="result-heading">
+        <div class="total-card">
+          <div class="total-top">
+            <h2 id="result-heading" tabindex="-1">Tavo mokesčiai ir įmokos</h2>
+            <span class="result-period-label">Metai</span>
+          </div>
+          <div class="total-amount" id="total-amount">—</div>
+          <div class="total-note"><span class="total-dot" aria-hidden="true"></span><span id="result-caption">2025 m. pavyzdys · 2 000 € ant popieriaus per mėnesį</span></div>
+        </div>
+        <div class="breakdown paper">
+          <p class="result-message stale-message" id="stale-result" hidden>Duomenys pakeisti. Rodomas paskutinis skaičiavimas.</p>
+          <p class="result-message" id="amount-kind"></p>
+          <p class="result-message" id="wage-estimate" hidden></p>
+          <p class="result-message warning-message" id="result-warning" hidden></p>
+          <div class="wage-equivalent" id="wage-equivalent" hidden>
+            <h3>Kiek atlyginimų sudaro metiniai atlyginimo mokesčiai ir įmokos?</h3>
+            <p><strong id="wage-equivalent-value"></strong> atlyginimo ant popieriaus</p>
+            <div class="wage-equivalent-track" aria-hidden="true"><span id="wage-equivalent-fill"></span></div>
+            <p class="field-help">Palyginimui naudojami darbuotojo GPM, VSD ir PSD.</p>
+          </div>
+          <div id="income-summary" class="summary-group">
+            <h3>Pajamų mokesčiai ir įmokos</h3>
+            <dl id="income-rows"></dl>
+          </div>
+          <div class="summary-group">
+            <h3>Mokesčiai pirkinių kainose</h3>
+            <dl id="buying-rows"></dl>
+          </div>
+          <details id="tax-bases" class="purchase-summary" hidden>
+            <summary><span class="details-icon" aria-hidden="true">+</span> Patikrinti metinius skaičiavimo pagrindus</summary>
+            <dl id="tax-base-rows"></dl>
+            <p class="field-help" id="tax-bases-note"></p>
+          </details>
+          <details id="purchase-summary" class="purchase-summary" hidden>
+            <summary><span class="details-icon" aria-hidden="true">+</span> Metinės sumos pagal prekę ar paslaugą</summary>
+            <ul id="purchase-results"></ul>
+          </details>
+        </div>
+        <div class="report-actions paper">
+          <div class="report-buttons">
+            <button type="button" id="view-report" class="secondary-button report-main-button">Peržiūrėti ataskaitą</button>
+            <button type="button" id="share-result" class="secondary-button">Dalytis suvestine</button>
+          </div>
+          <p class="field-help" id="report-help">Kol neįvedei savo duomenų, gali atsidaryti pavyzdžio ataskaitą ir suvestinę.</p>
+          <div class="result-links">
+            <a class="comparison-jump" href="#palyginimas">Peržiūrėti palyginimus ↓</a>
+            <a class="comparison-jump" href="#islaidos">Peržiūrėti išlaidų paskirstymą ↓</a>
+          </div>
+        </div>
+        <p class="sr-only" id="result-announcement" role="status"></p>
+      </section>
+    </div>
+
+    <section class="comparison paper" id="palyginimas" aria-labelledby="comparison-heading">
+      <div class="comparison-header">
+        <div>
+          <div class="section-kicker">Perkamosios galios palyginimas</div>
+          <h2 id="comparison-heading" tabindex="-1">Ką už šią sumą galima įsigyti?</h2>
+          <p>Kiekvienam palyginimui naudojama visa 2025 m. mokesčių ir įmokų suma bei nurodyta 2026 m. kaina su mokesčiais. Kainų šaltiniai patikrinti <time id="comparison-checked" datetime="2026-11-19">2026-11-19</time>.</p>
+        </div>
+        <div class="comparison-basis">
+          <strong id="comparison-total">—</strong>
+          <span id="comparison-caption">Metinė suma</span>
+        </div>
+      </div>
+      <p class="stale-message comparison-stale" id="stale-comparison" hidden>Palyginimui naudojamas paskutinis skaičiavimas.</p>
+      <p class="field-help" id="comparison-caveats" hidden></p>
+      <ul id="price-grid" class="price-grid" aria-label="Palyginimai pagal prekę arba paslaugą"></ul>
+      <div class="comparison-actions">
+        <button id="more-prices" type="button" class="secondary-button" aria-controls="price-grid" aria-expanded="false">Daugiau palyginimų</button>
+        <a class="comparison-action-link" href="#result-heading">Mokesčių išklotinė <span aria-hidden="true">↑</span></a>
+        <button id="prepare-share-card" class="comparison-text-button" type="button">Paruošti rezultato kortelę</button>
+      </div>
+      <div id="share-card-ready" class="share-card-ready" hidden>
+        <a id="share-card-download" class="secondary-button" download="mano-mokesciu-rezultatas.png">Atsisiųsti PNG</a>
+        <button id="share-card-native" class="secondary-button" type="button" hidden>Dalytis paveikslėliu</button>
+        <span>Kortelėje matysis bendra suma ir keturi palyginimai. Paveikslėlį galėsi pridėti prie „Facebook“ įrašo.</span>
+      </div>
+      <p id="share-card-status" class="field-help share-feedback" role="status"></p>
+      <div class="mvpd-comparison">
+        <div>
+          <h3>Minimalūs vieno žmogaus vartojimo poreikiai</h3>
+          <p>Maisto ir kiti būtinieji poreikiai · <span id="mvpd-price"></span></p>
+          <a id="mvpd-source">Rodiklio šaltinis</a>
+        </div>
+        <strong id="mvpd-equivalent">—</strong>
+      </div>
+      <ul id="personal-comparisons" class="personal-comparisons" aria-label="Palyginimai pagal tavo sąskaitas" hidden></ul>
+      <details class="custom-comparison">
+        <summary><span class="details-icon" aria-hidden="true">+</span> Palyginti su savo kaina</summary>
+        <div class="custom-fields">
+          <div class="field">
+            <label for="custom-price">Vieneto kaina</label>
+            <div class="money-field"><input id="custom-price" inputmode="decimal" autocomplete="off" placeholder="0,00" aria-describedby="custom-price-help"><span aria-hidden="true">€</span></div>
+          </div>
+          <div class="field">
+            <label for="custom-unit">Matavimo vienetas</label>
+            <select id="custom-unit">
+              <option value="whole">vnt.</option>
+              <option value="weight">kg</option>
+              <option value="volume">l</option>
+              <option value="energy">kWh</option>
+              <option value="month">mėn.</option>
+            </select>
+          </div>
+          <output id="custom-equivalent" aria-label="Kiekis pagal tavo kainą">—</output>
+        </div>
+        <p class="field-help" id="custom-price-help">Įvesk dabartinę vieneto kainą su mokesčiais.</p>
+      </details>
+      <p class="comparison-source-note">Prie kiekvienos kainos nurodytas jos šaltinis ir laikotarpis arba patikros data. Prekių ir paslaugų vaizdai iliustraciniai, sukurti DI.</p>
+    </section>
+
+    <section class="spending paper" id="islaidos" aria-labelledby="spending-heading">
+      <div class="spending-header">
+        <div class="section-kicker">Lietuva · 2024 m. išlaidų proporcijos</div>
+        <h2 id="spending-heading">Viešųjų išlaidų paskirstymas</h2>
+      </div>
+      <div class="segmented spending-views" role="tablist" aria-label="Išlaidų rodiniai">
+        <button type="button" role="tab" id="spending-overview-tab" aria-controls="spending-overview" aria-selected="true">Išlaidų išklotinė</button>
+        <button type="button" role="tab" id="spending-insurance-tab" aria-controls="contributions" aria-selected="false" tabindex="-1">GPM, VSD ir PSD išklotinė</button>
+      </div>
+      <div class="spending-view" id="spending-overview" role="tabpanel" aria-labelledby="spending-overview-tab" tabindex="0">
+        <p class="spending-context">Čia matyti, kaip tavo <strong>2025 m. mokesčių ir įmokų suma</strong> pasiskirstytų pagal faktines <strong>2024 m. Lietuvos viešųjų išlaidų proporcijas</strong>. Rodomi įverčiai.</p>
+        <p class="stale-message comparison-stale" id="stale-spending" hidden>Rodomas paskutinis skaičiavimas. Perskaičiuok pakeistus duomenis.</p>
+        <p class="field-help" id="spending-caveats" hidden></p>
+        <div class="spending-body">
+          <div class="chart-side">
+            <div class="donut" id="donut">
+              <div class="donut-inner"><span id="allocation-amount">—</span><small id="allocation-caption">Paskirstoma suma</small></div>
+            </div>
+          </div>
+          <div class="spending-table">
+            <div class="receipt-controls">
+              <p>Pasirink išlaidų sritį, kad pamatytum jos papunkčius.</p>
+              <button type="button" class="secondary-button" id="expand-spending" aria-controls="spending-list">Išskleisti visas</button>
+            </div>
+            <div class="table-head" aria-hidden="true"><span>Išlaidų sritis</span><span>Įvertis</span></div>
+            <ul id="spending-list" aria-label="Išlaidų sritys ir įvertintos sumos"></ul>
+          </div>
+        </div>
+        <details class="field-details receipt-note">
+          <summary><span class="details-icon" aria-hidden="true">+</span> Kaip skaičiuojamos išlaidų dalys?</summary>
+          <p>Bendra skaičiuoklės suma paskirstoma pagal „Eurostato“ 2024 m. Lietuvos valdžios sektoriaus išlaidų struktūrą. Ji apima konsoliduotas valstybės, savivaldybių ir socialinės apsaugos fondų išlaidas. Tikslios konkretaus žmogaus mokėjimų paskirties šie duomenys neparodo.</p>
+          <p>Paskelbtos 67 iš 69 papunkčių sumos. Nepaskelbtos sumos pažymėtos atskirai. Apvalinant iki centų, paskelbtų papunkčių įverčių suma suderinama su srities įverčiu.</p>
+          <div class="source-links">
+            <a href="https://ec.europa.eu/eurostat/databrowser/view/gov_10a_exp/default/table?lang=en">Eurostatas · Viešosios išlaidos pagal funkcijas (COFOG)</a>
+            <a href="https://osp.stat.gov.lt/valdzios-sektoriaus-finansai">Valstybės duomenų agentūra · Atnaujinimo kalendorius</a>
+          </div>
+        </details>
+      </div>
+      <div class="spending-view contributions" id="contributions" role="tabpanel" aria-labelledby="spending-insurance-tab" tabindex="0" hidden>
+        <h3 id="contrib-heading">GPM, VSD ir PSD dalis bendroje sumoje</h3>
+        <p class="contrib-intro" id="contrib-intro"></p>
+        <p class="stale-message comparison-stale" id="stale-insurance" hidden>Rodomas paskutinis skaičiavimas. Perskaičiuok pakeistus duomenis.</p>
+        <div class="contrib-list">
+          <details class="contrib-fund" id="gpm-purpose" open>
+            <summary><span class="details-icon" aria-hidden="true">+</span><span>GPM · Gyventojų pajamų mokestis</span><strong id="gpm-purpose-amount">—</strong></summary>
+            <dl id="gpm-purpose-rows"></dl>
+            <p class="contrib-note" id="gpm-purpose-note"></p>
+            <a class="contrib-source" id="gpm-purpose-source"></a>
+          </details>
+          <details class="contrib-fund" id="vsd-purpose" open>
+            <summary><span class="details-icon" aria-hidden="true">+</span><span>VSD · Socialinis draudimas</span><strong id="vsd-purpose-amount">—</strong></summary>
+            <dl id="vsd-purpose-rows"></dl>
+            <p class="contrib-note" id="vsd-purpose-note"></p>
+            <a class="contrib-source" id="vsd-purpose-source"></a>
+          </details>
+          <details class="contrib-fund" id="psd-purpose" open>
+            <summary><span class="details-icon" aria-hidden="true">+</span><span>PSD · Sveikatos draudimas</span><strong id="psd-purpose-amount">—</strong></summary>
+            <dl id="psd-purpose-rows"></dl>
+            <a class="contrib-source" id="psd-purpose-source"></a>
+          </details>
+        </div>
+        <button type="button" class="comparison-text-button" id="insurance-basis">Rodyti bendras proporcijas</button>
+        <details class="field-details later-tax" id="gpm-2025-2026">
+          <summary><span class="details-icon" aria-hidden="true">+</span> GPM paskirstymas 2025 ir 2026 m.</summary>
+          <div class="later-tax-content">
+            <p>Kokia dalis nuo bendrų šalies GPM įplaukų tenka kiekvienam biudžetui.</p>
+            <table class="budget-table tax-year-table">
+              <thead><tr><th scope="col">Kam skiriama</th><th scope="col">2025 m.</th><th scope="col">2026 m.</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Visoms savivaldybėms kartu</th><td>50,64 %</td><td>49,43 %</td></tr>
+                <tr><th scope="row">Valstybės biudžetui</th><td>49,36 %</td><td>48,57 %</td></tr>
+                <tr><th scope="row">Gynybos fondui pagal 2 % taisyklę</th><td>Taikoma nuo 2026 m.</td><td>2 %</td></tr>
+              </tbody>
+            </table>
+            <p class="field-help">2026 m. savivaldybėms tenka 50,44 % GPM sumos, likusios atskaičius 2 % Gynybos fondui. Fiksuotas GPM už verslo liudijimą skirstomas pagal atskirą tvarką.</p>
+            <p class="field-help">2025 ir 2026 m. savivaldybių civilinei saugai skirta po 25 mln. € iš valstybės biudžeto GPM pajamų. Fondo 2025 m. ataskaitoje nurodyta, kad tais metais šiai programai panaudota 2,48 mln. €.</p>
+            <div class="defence-example" aria-labelledby="defence-heading">
+              <h4 id="defence-heading">Tavo mokesčiai ir Valstybės gynybos fondas</h4>
+              <p id="defence-guide">Įvesk pasirinktų metų pirkinių akcizų sumą.</p>
+              <div class="defence-fields">
+                <div class="field">
+                  <label for="defence-year">Metai</label>
+                  <select id="defence-year"><option value="2025">2025 m.</option><option value="2026">2026 m.</option></select>
+                </div>
+                <div class="field" id="defence-gpm-field">
+                  <label for="defence-gpm">Sumokėtas GPM</label>
+                  <div class="money-field"><input id="defence-gpm" inputmode="decimal" autocomplete="off" placeholder="Pvz., 1 000" aria-describedby="defence-gpm-help"><span aria-hidden="true">€</span></div>
+                  <p class="field-help" id="defence-gpm-help">Įvesk GPM be fiksuoto mokesčio už verslo liudijimą.</p>
+                </div>
+                <div class="field">
+                  <label for="defence-excise">Pirkinių akcizai</label>
+                  <div class="money-field"><input id="defence-excise" inputmode="decimal" autocomplete="off" placeholder="Pvz., 100" aria-describedby="defence-excise-help"><span aria-hidden="true">€</span></div>
+                  <p class="field-help" id="defence-excise-help">Įvesk tik akcizų sumą, įskaičiuotą į prekių kainą.</p>
+                </div>
+              </div>
+              <p class="field-help" id="defence-rates"></p>
+              <p class="error" id="defence-error" hidden>Įvesk sumą nuo 0 iki 100 000 000 € su ne daugiau kaip dviem skaitmenimis po kablelio.</p>
+              <div class="defence-result" role="status">
+                <div id="defence-result" hidden>
+                  <p>Orientacinė fondo įplaukų dalis pagal įvestas sumas <strong id="defence-amount"></strong></p>
+                  <p class="field-help" id="defence-breakdown"></p>
+                  <p class="field-help">Ši dalis jau įeina į įvestas mokesčių sumas.</p>
+                </div>
+              </div>
+            </div>
+            <div class="source-links">
+              <a href="https://www.e-tar.lt/portal/li/legalActPrint?documentId=f768c8a2c13d11ef88c08519262548c4">2025 m. biudžeto įstatymas</a>
+              <a href="https://www.e-tar.lt/portal/lt/legalAct/dcff3500df1711f08918e1adc7c5b1ec">2026 m. biudžeto įstatymas</a>
+              <a href="https://www.e-tar.lt/portal/lt/legalAct/3be40b20353e11efbdaea558de59136c/asr">Valstybės gynybos fondo įstatymas</a>
+              <a href="https://kam.lt/wp-content/uploads/2026/02/BVAVGF2025-12-31.pdf">Fondo 2025 m. vykdymo ataskaita</a>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="method" id="metodika" aria-labelledby="method-heading">
+      <h2 id="method-heading">Metodika ir šaltiniai</h2>
+      <div class="method-grid">
+        <article class="method-card">
+          <h3>Mokesčiai ir įmokos</h3>
+          <p>Atlyginimui taikomi 2025 m. tarifai ir metinis NPD. Įvedus sumą į rankas, atlyginimas ant popieriaus atkuriamas atsižvelgiant į tai, ar darbdavys taikė NPD. Galutinei metinei GPM prievolei skaičiuojamas priklausantis metinis NPD. Pažymėta II pakopos įmoka naudojama tik šiam perskaičiavimui. Dividendams skaičiuojamas 15 % GPM.</p>
+          <p>VSD ir PSD įmokas įvertiname pagal atlyginimą ant popieriaus. Jei dalis atlyginimo priskaičiuota vienais metais, o išmokėta kitais, įvertis gali skirtis nuo faktinių įmokų. Žinomas faktines sumas galima įvesti pasirinkus „Jau sumokėti mokesčiai“.</p>
+          <p>Įvertis rodo metinę prievolę prieš avansų ir išskaičiuotų mokėjimų užskaitymą. Jei gavai skirtingų rūšių pajamų, taikei deklaruojamų išlaidų lengvatas ar nori įtraukti kitus mokesčius, gali įvesti faktines 2025 m. sumas.</p>
+          <p>Pensijos režimas skirtas „Sodros“ ir Lietuvos valstybinėms pensijoms. Užsienio pensijoms ir privačių pensijų fondų išmokoms gali būti taikomos kitos taisyklės.</p>
+          <div class="source-links">
+            <a href="https://www.vmi.lt/evmi/lt/paaiskinimai-apie-2025-metu-pajamu-ir-turto-deklaravimo-tvarka">VMI · 2025 m. GPM tarifai ir metinis NPD</a>
+            <a href="https://www.vmi.lt/evmi/kaip-apmokestinami-gauti-dividendai-ir-kas-turi-sumoketi-pajamu-mokesti-">VMI · Dividendai</a>
+            <a href="https://www.vmi.lt/evmi/pajamu-apmokestinimas-deklaravimas">VMI · Individuali veikla</a>
+            <a href="https://www.vmi.lt/evmi/documents/20142/606685/GPM311%2Bnedeklaruojam%C5%B3%2Bneapmokestinam%C5%B3j%C5%B3%2Bpajam%C5%B3%2Bs%C4%85ra%C5%A1as.pdf/9ce22368-e993-b841-97d1-b58d0149b966?t=1581339896006">VMI · Neapmokestinamos pensijos (37 punktas)</a>
+            <a href="https://ligoniukasa.lrv.lt/lt/veiklos-sritys/informacija-gyventojams/apie-privalomaji-sveikatos-draudima/psd-dalyviai/valstybes-lesomis-draudziami-gyventojai/">Valstybinė ligonių kasa · Valstybės lėšomis draudžiami gyventojai</a>
+            <a href="https://sodra.lt/aktuali-informacija-draudejams">„Sodra“ · Darbuotojų įmokos</a>
+            <a href="https://sodra.lt/formos-ir-sablonai/sam-pranesimo-pildymas-ir-pateikimas/sam-pranesimo-pateikimas-ir-pildymas?lang=lt">„Sodra“ · Priskaičiuotų pajamų deklaravimas</a>
+            <a href="https://sodra.lt/wp-content/uploads/2025/08/Imoku-tarifai-nuo-2024-m-savarankiskai-dirbantiems_2024-12-301.pdf">„Sodra“ · 2025 m. savarankiško darbo įmokos</a>
+            <a href="https://www.e-tar.lt/rs/legalact/c2654fb001d411f1b96ed27de6271e6a/">VMI · GPM311 taisyklės ir pavyzdžiai</a>
+          </div>
+        </article>
+        <article class="method-card">
+          <h3>PVM ir akcizai</h3>
+          <p>PVM dalis iš galutinės kainos lygi <code>kaina × tarifas ÷ (100 + tarifas)</code>. Akcizas jau įskaičiuotas į PVM bazę. Jo suma priklauso nuo prekės rūšies ir kiekio, o kai kurių prekių atveju ir nuo stiprumo ar kainos.</p>
+          <p>Vidutinį savaitės kiekį ir išlaidas dauginame iš 52. Mokesčius kiekvienai eilutei apvaliname iki centų, todėl sujungus eilutes galimas centų skirtumas.</p>
+          <p>Jei benzinui ar dyzelinui įvestos tik išlaidos arba tik kiekis, trūkstamą reikšmę įvertiname pagal vidutinę 2025 m. mažmeninę kainą Lietuvoje. Kai kitiems pirkiniams trūksta kainos ar kiekio, rezultatas parodo, kurio mokesčio apskaičiuoti nepavyko.</p>
+          <p>Paslaugų mėnesio vidurkį dauginame iš 12. Pagal 2025 m. tarifus 9 % PVM taikome centralizuotam būsto šildymui ir karštam vandeniui bei reguliariųjų maršrutų bilietams. Buitinei elektrai ir gamtinėms dujoms 2025 m. akcizas netaikomas.</p>
+          <div class="source-links">
+            <a href="https://www.vmi.lt/evmi/lt/lengvatinis-9-proc.-pvm-tarifas-19-str.-">VMI · 9 % PVM</a>
+            <a href="https://www.vmi.lt/evmi/lt/lengvatinis-5-proc.-pvm-tarifas-19-str.-">VMI · 5 % PVM</a>
+            <a href="https://www.vmi.lt/evmi/documents/20142/391113/PVM%2Bklasifikatorius%2B2025-12-16.pdf/18dadf9b-5b2a-9c17-f262-cc1d2771ff7c?t=1765865860904">VMI · 2025 m. PVM tarifų klasifikatorius</a>
+            <a href="https://www.e-tar.lt/portal/lt/legalActPrint?actualEditionId=FkYjDJpbRG&amp;documentId=TAR.B9E1D301256F">Akcizų įstatymas · Buitinės elektros ir dujų išimtys (48 ir 58¹ straipsniai)</a>
+            <a href="https://www.lrmuitine.lt/mport/failai/verslui/tarifinis_reguliavimas/akcizu_PVM_tarifai/AkcizuTarifai_nuo20250101.pdf">Lietuvos muitinė · 2025 m. akcizų tarifai</a>
+            <a href="https://www.ena.lt/uploads/2025-men-data/2025-xii-energetikos-duomenu-apzvalga-20260115.pdf#page=25">Lietuvos energetikos agentūra ir Europos Komisija · 2025 m. degalų kainos</a>
+          </div>
+        </article>
+        <article class="method-card">
+          <h3>Viešosios išlaidos ir GPM</h3>
+          <p>Mokesčiai skaičiuojami pagal 2025 m. taisykles. Išlaidų išklotinė remiasi 2024 m. „Eurostato“ duomenimis. Išsami 2025 m. Lietuvos valdžios sektoriaus išlaidų išklotinė dar nepaskelbta.</p>
+          <p>Išklotinėje rodoma, kaip GPM dalijamas tarp biudžetų ir kam skirtos VSD bei PSD įmokos. Šios sumos jau įtrauktos į bendrą rezultatą.</p>
+          <div class="source-links">
+            <a href="https://ec.europa.eu/eurostat/databrowser/view/gov_10a_exp/default/table?lang=en">Eurostatas · Viešųjų išlaidų duomenys</a>
+            <a href="https://osp.stat.gov.lt/valdzios-sektoriaus-finansai">Valstybės duomenų agentūra · Atnaujinimo kalendorius</a>
+          </div>
+        </article>
+      </div>
+      <p class="image-credit">Iniciatoriaus <a href="https://commons.wikimedia.org/wiki/File:Vitalijus_%C5%A0er%C5%A1niovas.jpg">portreto šaltinis</a> · CC0 1.0</p>
+      <details class="field-details review-cases">
+        <summary><span class="details-icon" aria-hidden="true">+</span> Kontroliniai skaičiavimai</summary>
+        <dl>
+          <div><dt>Darbo užmokestis 24 000 € per metus</dt><dd>Metinis NPD 3 307,44 €. GPM 4 138,51 €, VSD 3 004,80 €, PSD 1 675,20 €. Iš viso 8 818,51 €.</dd></div>
+          <div><dt>Individualios veiklos apmokestinamasis pelnas 23 000,12 €</dt><dd>15 % GPM 3 450,02 € ir atskirai apvalinamas 1 839,99 € kreditas. Mokėtinas GPM 1 610,03 €.</dd></div>
+          <div><dt>Individualios veiklos pajamos 38 000 €</dt><dd>30 % išlaidų ir 1 600 € perkeltų nuostolių. Su 9 minimalaus PSD mėnesiais GPM 2 083,33 €, VSD 2 817,00 €, PSD 1 570,50 €. Iš viso 6 470,83 €.</dd></div>
+          <div><dt>Kiti pirkiniai už 121 € per savaitę (21 % PVM)</dt><dd>121 € × 52 savaitės × 21 ÷ 121 = 1 092 € PVM per metus.</dd></div>
+        </dl>
+      </details>
+    </section>
+
+    <noscript><p class="error">Skaičiuoklei reikia „JavaScript“. Įjunk jį savo naršyklėje.</p></noscript>
+  </main>
+  <footer><div class="shell footer-inner"><span>Mano mokesčių euras</span><span>Rezultatai preliminarūs</span></div></footer>
+</body>
+</html>
