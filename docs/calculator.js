@@ -4,7 +4,6 @@ const element = (id) => document.getElementById(id);
 const form = element("tax-form");
 const errorMessage = element("form-error");
 const incomeMode = element("income-mode");
-const wagePeriod = element("wage-period");
 const wageBasis = element("wage-basis");
 const wageInput = element("wages");
 const wageNpd = element("wage-npd");
@@ -55,14 +54,14 @@ function readField(field, { required = false, integer = false, min = 0, max = 10
   const label = field.labels?.[0]?.textContent.trim();
   if (!raw && !required) return null;
   if (!raw) showError(field, label ? "Užpildyk lauką „" + label + "“." : "Užpildyk pažymėtą lauką.");
-  if (!/^(?:\d+|\d{1,3}(?:[ \u00a0\u202f]\d{3})+)(?:[,.]\d+)?$/.test(raw)) {
+  const value = parseInputNumber(raw);
+  if (value === null) {
     showError(field, "Įvesk skaičių naudodamas kablelį arba tašką dešimtainėms dalims.");
   }
   const decimalPart = raw.split(/[,.]/)[1];
   if (decimals !== undefined && decimalPart?.length > decimals) {
     showError(field, "Įvesk kainą arba sumą su ne daugiau kaip dviem skaitmenimis po kablelio.");
   }
-  const value = Number(raw.replace(/\s/g, "").replace(",", "."));
   if (value < min || value > max || (integer && !Number.isInteger(value))) {
     const type = integer ? "sveiką skaičių" : "skaičių";
     const boundary = (number) => number.toLocaleString("lt-LT");
@@ -94,12 +93,12 @@ function changeWageBasis() {
   wageEntryBasis = wageBasis.value;
   wageInput.value = wageInputs[wageEntryBasis];
   const net = wageEntryBasis === "net";
-  element("wages-label").textContent = net ? "Atlyginimas į rankas" : "Atlyginimas ant popieriaus";
+  element("wages-label").textContent = net ? "Atlyginimas į rankas per mėnesį" : "Atlyginimas ant popieriaus per mėnesį";
   element("wage-pension-field").hidden = !net;
   element("wage-npd-field").hidden = !net;
   element("wage-help").textContent = net
-    ? "Įvesk 2025 m. mėnesio vidurkį arba metinę sumą. Kintant atlyginimui ar turint kitų pajamų, įvertis gali skirtis nuo algalapio."
-    : "Įvesk 2025 m. mėnesio vidurkį arba metinę sumą su premijomis.";
+    ? "Įvesk 2025 m. mėnesio vidurkį. Kintant atlyginimui ar turint kitų pajamų, įvertis gali skirtis nuo algalapio."
+    : "Įvesk 2025 m. mėnesio vidurkį su premijomis.";
 }
 
 function clearError() {
@@ -137,13 +136,12 @@ function markUncalculated() {
 function readIncome() {
   switch (incomeMode.value) {
     case "wages": {
-      const enteredWage = readMoney("wages", true);
+      const annual = readMoney("wages", true) * 12;
       const higher = readMonths("disability-higher");
       const lower = readMonths("disability-lower");
       if (higher + lower > 12) {
         showError(element("disability-lower"), "Abiejų negalios kategorijų mėnesių suma negali viršyti 12.");
       }
-      const annual = wagePeriod.value === "month" ? enteredWage * 12 : enteredWage;
       const isNet = wageBasis.value === "net";
       const pensionRate = isNet && element("wage-pension").checked ? 0.03 : 0;
       const npd = isNet ? wageNpd.value : null;
@@ -275,7 +273,6 @@ function purchaseResultRow(item) {
     netLabel: item.vatOnly ? "Be PVM" : "Be PVM ir akcizo",
     net: item.netPrice === null ? "" : (estimated ? "≈ " : "") + money(item.netPrice),
     note: missing || item.estimate,
-    weekly: item.weekly,
   };
 }
 
@@ -616,7 +613,7 @@ function calculateResult({ scroll = false } = {}) {
   try {
     const income = readIncome();
     const purchases = [...purchaseEditor.read(), ...otherPurchaseEditor.read()];
-    const otherVat = vatFields.reduce((sum, field) => sum + vatInPrice(readMoney(field.id) * purchaseWeeksPerYear, field.rate), 0);
+    const otherVat = vatFields.reduce((sum, field) => sum + vatInPrice(readMoney(field.id) * purchaseMonthsPerYear, field.rate), 0);
     const vat = purchases.reduce((sum, item) => sum + item.vat, otherVat);
     result = { ...income, mode: incomeMode.value, purchases, vat };
     resultCardSharing.reset();

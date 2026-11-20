@@ -19,17 +19,17 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#f5f5ef">
   <title>Kur keliauja tavo mokesčiai?</title>
-  <link rel="stylesheet" href="./styles.css">
-  <script src="./tax-model.js" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=monthly-20261120">
+  <script src="./tax-model.js?v=monthly-20261120" defer></script>
   <script src="./spending-data.js" defer></script>
   <script src="./insurance-spending.js" defer></script>
-  <script src="./purchases.js" defer></script>
-  <script src="./report.js" defer></script>
+  <script src="./purchases.js?v=monthly-20261120" defer></script>
+  <script src="./report.js?v=monthly-20261120" defer></script>
   <script src="./comparison.js" defer></script>
   <script src="./share-card.js" defer></script>
   <script src="./sharing.js" defer></script>
   <script src="./defence-fund.js" defer></script>
-  <script src="./calculator.js" defer></script>
+  <script src="./calculator.js?v=monthly-20261120" defer></script>
 </head>
 <body>
   <a class="skip" href="#skaiciuokle">Pereiti prie skaičiuoklės</a>
@@ -108,21 +108,15 @@
               </select>
             </div>
             <div class="field">
-              <label for="wages" id="wages-label">Atlyginimas ant popieriaus</label>
-              <div class="wage-fields">
-                <div class="money-field"><input id="wages" inputmode="decimal" autocomplete="off" value="2000" aria-describedby="wage-help"><span aria-hidden="true">€</span></div>
-                <select id="wage-period" aria-label="Atlyginimo laikotarpis">
-                  <option value="month">Per mėnesį</option>
-                  <option value="year">Per metus</option>
-                </select>
-              </div>
-              <p class="field-help" id="wage-help">Įvesk 2025 m. mėnesio vidurkį arba metinę sumą su premijomis.</p>
+              <label for="wages" id="wages-label">Atlyginimas ant popieriaus per mėnesį</label>
+              <div class="money-field"><input id="wages" inputmode="decimal" autocomplete="off" value="2000" aria-describedby="wage-help"><span aria-hidden="true">€</span></div>
+              <p class="field-help" id="wage-help">Įvesk 2025 m. mėnesio vidurkį su premijomis.</p>
             </div>
             <div class="field block-field" id="wage-npd-field" hidden>
               <label for="wage-npd">Ar darbdavys taikė NPD?</label>
               <select id="wage-npd" aria-describedby="wage-npd-help">
                 <option value="unknown">Nežinau</option>
-                <option value="yes">Taikė visą laikotarpį</option>
+                <option value="yes">Taikė</option>
                 <option value="no">Netaikė</option>
               </select>
               <p class="field-help" id="wage-npd-help">Jei nežinai, skaičiuojame su įprastai taikomu metiniu NPD. Jei NPD keitėsi, tikslesniam įverčiui naudok algalapyje nurodytą sumą ant popieriaus.</p>
@@ -227,25 +221,25 @@
         <section class="input-card buying-card paper" id="pirkiniai" aria-labelledby="buying-heading">
           <div class="section-kicker">2025 m. pirkiniai</div>
           <h2 id="buying-heading">PVM ir akcizai</h2>
-          <p class="field-help buying-description">Prekėms įvesk savaitės išlaidas arba kiekį. Namų ūkio paslaugoms tinka mėnesio vidurkis arba visa 2025 m. suma.</p>
+          <p class="field-help buying-description">Įvesk vidutines 2025 m. mėnesio išlaidas arba prekių kiekį per mėnesį. Jei sąskaitos kito, naudok visų metų mėnesio vidurkį.</p>
           <div id="purchase-list"></div>
           <button id="add-purchase" class="secondary-button add-purchase" type="button"><span aria-hidden="true">+</span> Pridėti prekę ar paslaugą</button>
 
           <details class="field-details">
             <summary><span class="details-icon" aria-hidden="true">+</span> Kiti pirkiniai</summary>
-            <p class="field-help" id="vat-help">Įvesk, kiek per savaitę vidutiniškai išleisdavai kitiems pirkiniams su PVM. Išlaidas sugrupuok pagal čekyje nurodytą PVM tarifą. Šios sumos neturėtų apimti atskirai įvestų pirkinių ir taros užstato.</p>
+            <p class="field-help" id="vat-help">Įvesk, kiek per mėnesį vidutiniškai išleisdavai kitiems pirkiniams su PVM. Išlaidas sugrupuok pagal čekyje nurodytą PVM tarifą. Šios sumos neturėtų apimti atskirai įvestų pirkinių ir taros užstato.</p>
             <div class="vat-grid">
               <div class="field">
-                <label for="vat-standard">21 % · per savaitę</label>
-                <div class="money-field"><input id="vat-standard" inputmode="decimal" autocomplete="off" placeholder="Pvz., 50" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
+                <label for="vat-standard">21 % · per mėnesį</label>
+                <div class="money-field"><input id="vat-standard" inputmode="decimal" autocomplete="off" placeholder="Pvz., 200" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
               </div>
               <div class="field">
-                <label for="vat-9">9 % · per savaitę</label>
-                <div class="money-field"><input id="vat-9" inputmode="decimal" autocomplete="off" placeholder="Pvz., 20" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
+                <label for="vat-9">9 % · per mėnesį</label>
+                <div class="money-field"><input id="vat-9" inputmode="decimal" autocomplete="off" placeholder="Pvz., 90" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
               </div>
               <div class="field">
-                <label for="vat-5">5 % · per savaitę</label>
-                <div class="money-field"><input id="vat-5" inputmode="decimal" autocomplete="off" placeholder="Pvz., 10" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
+                <label for="vat-5">5 % · per mėnesį</label>
+                <div class="money-field"><input id="vat-5" inputmode="decimal" autocomplete="off" placeholder="Pvz., 45" aria-describedby="vat-help"><span aria-hidden="true">€</span></div>
               </div>
             </div>
             <details class="field-details">
@@ -278,13 +272,13 @@
           <p class="result-message" id="wage-estimate" hidden></p>
           <p class="result-message warning-message" id="result-warning" hidden></p>
           <div class="wage-equivalent" id="wage-equivalent" hidden>
-            <h3>Kiek atlyginimų sudaro metiniai atlyginimo mokesčiai ir įmokos?</h3>
+            <h3>Kiek jūsų atlyginimų sudaro per metus sumokėtų mokesčių?</h3>
             <p><strong id="wage-equivalent-value"></strong> atlyginimo ant popieriaus</p>
             <div class="wage-equivalent-track" aria-hidden="true"><span id="wage-equivalent-fill"></span></div>
             <p class="field-help">Palyginimui naudojami darbuotojo GPM, VSD ir PSD.</p>
           </div>
-          <div id="income-summary" class="summary-group">
-            <h3>Pajamų mokesčiai ir įmokos</h3>
+          <div id="income-summary" class="summary-group summary-group--primary">
+            <h3>Per metus sumokėti mokesčiai</h3>
             <dl id="income-rows"></dl>
           </div>
           <div class="summary-group">
@@ -515,9 +509,9 @@
         <article class="method-card">
           <h3>PVM ir akcizai</h3>
           <p>PVM dalis iš galutinės kainos lygi <code>kaina × tarifas ÷ (100 + tarifas)</code>. Akcizas jau įskaičiuotas į PVM bazę. Jo suma priklauso nuo prekės rūšies ir kiekio, o kai kurių prekių atveju ir nuo stiprumo ar kainos.</p>
-          <p>Vidutinį savaitės kiekį ir išlaidas dauginame iš 52. Mokesčius kiekvienai eilutei apvaliname iki centų, todėl sujungus eilutes galimas centų skirtumas.</p>
+          <p>Mėnesio kiekius ir išlaidas dauginame iš 12. Mokesčius kiekvienai eilutei apvaliname iki centų, todėl sujungus eilutes galimas centų skirtumas.</p>
           <p>Jei benzinui ar dyzelinui įvestos tik išlaidos arba tik kiekis, trūkstamą reikšmę įvertiname pagal vidutinę 2025 m. mažmeninę kainą Lietuvoje. Kai kitiems pirkiniams trūksta kainos ar kiekio, rezultatas parodo, kurio mokesčio apskaičiuoti nepavyko.</p>
-          <p>Paslaugų mėnesio vidurkį dauginame iš 12. Pagal 2025 m. tarifus 9 % PVM taikome centralizuotam būsto šildymui ir karštam vandeniui bei reguliariųjų maršrutų bilietams. Buitinei elektrai ir gamtinėms dujoms 2025 m. akcizas netaikomas.</p>
+          <p>Pagal 2025 m. tarifus 9 % PVM taikome centralizuotam būsto šildymui ir karštam vandeniui bei reguliariųjų maršrutų bilietams. Buitinei elektrai ir gamtinėms dujoms 2025 m. akcizas netaikomas.</p>
           <div class="source-links">
             <a href="https://www.vmi.lt/evmi/lt/lengvatinis-9-proc.-pvm-tarifas-19-str.-">VMI · 9 % PVM</a>
             <a href="https://www.vmi.lt/evmi/lt/lengvatinis-5-proc.-pvm-tarifas-19-str.-">VMI · 5 % PVM</a>
@@ -545,7 +539,7 @@
           <div><dt>Darbo užmokestis 24 000 € per metus</dt><dd>Metinis NPD 3 307,44 €. GPM 4 138,51 €, VSD 3 004,80 €, PSD 1 675,20 €. Iš viso 8 818,51 €.</dd></div>
           <div><dt>Individualios veiklos apmokestinamasis pelnas 23 000,12 €</dt><dd>15 % GPM 3 450,02 € ir atskirai apvalinamas 1 839,99 € kreditas. Mokėtinas GPM 1 610,03 €.</dd></div>
           <div><dt>Individualios veiklos pajamos 38 000 €</dt><dd>30 % išlaidų ir 1 600 € perkeltų nuostolių. Su 9 minimalaus PSD mėnesiais GPM 2 083,33 €, VSD 2 817,00 €, PSD 1 570,50 €. Iš viso 6 470,83 €.</dd></div>
-          <div><dt>Kiti pirkiniai už 121 € per savaitę (21 % PVM)</dt><dd>121 € × 52 savaitės × 21 ÷ 121 = 1 092 € PVM per metus.</dd></div>
+          <div><dt>Kiti pirkiniai už 121 € per mėnesį (21 % PVM)</dt><dd>121 € × 12 mėnesių × 21 ÷ 121 = 252 € PVM per metus.</dd></div>
         </dl>
       </details>
     </section>

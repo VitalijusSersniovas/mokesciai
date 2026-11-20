@@ -248,6 +248,7 @@ test('the highlighted purchase price and missing inputs appear in the preview, d
   for (const html of [preview.innerHTML, await files[0].text(), printCopy.innerHTML]) {
     assert.match(html, /Be PVM ir akcizo <strong>≈ 1 211,44 €<\/strong>/u);
     assert.match(html, /Su mokesčiais 2 600,00 € · Akcizas ≈ 937,32 € · PVM 451,24 €/u);
+    assert.match(html, /Mėnesio kiekius ir išlaidas padauginome iš 12\./u);
     assert.match(html, /Be PVM ir akcizo · neapskaičiuota<\/p>\s*<p>PVM neskaičiuotas<\/p>\s*<p>Įvesk pirkimo kainą\.<\/p>/u);
   }
 });

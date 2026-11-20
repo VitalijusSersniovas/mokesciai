@@ -1,6 +1,6 @@
 "use strict";
 
-const purchaseWeeksPerYear = 52;
+const purchaseMonthsPerYear = 12;
 
 (() => {
   const groups = {
@@ -14,6 +14,8 @@ const purchaseWeeksPerYear = 52;
   const averageFuelPrices = { petrol: 1.423, diesel: 1.507 };
   const fuelPriceFormat = new Intl.NumberFormat("lt-LT", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   const quantityFormat = new Intl.NumberFormat("lt-LT", { maximumFractionDigits: 1 });
+  const amountFormat = new Intl.NumberFormat("lt-LT", { maximumFractionDigits: 2 });
+  const formatFuelQuantity = (quantity) => (quantity < 0.1 ? amountFormat : quantityFormat).format(quantity);
 
   // 2025 m. tarifai vienam įvesties vienetui pagal Lietuvos muitinės tarifų lentelę.
   const products = {
@@ -45,20 +47,20 @@ const purchaseWeeksPerYear = 52;
   };
 
   const purchaseExamples = {
-    petrol: { quantity: "30", spending: "50" },
-    diesel: { quantity: "30", spending: "50" },
-    gas: { quantity: "15", spending: "20" },
-    beer: { quantity: "2", spending: "6", strength: "5" },
-    beerReduced: { quantity: "2", spending: "6", strength: "5" },
-    lightWine: { quantity: "1", spending: "8" },
-    wine: { quantity: "0,75", spending: "8" },
-    intermediate: { quantity: "0,5", spending: "8", strength: "18" },
-    spirits: { quantity: "0,5", spending: "12", strength: "40" },
-    cigarettes: { quantity: "0,5", spending: "3" },
-    heated: { quantity: "20", spending: "5" },
-    liquid: { quantity: "2", spending: "3" },
-    tobacco: { quantity: "10", spending: "5" },
-    other: { quantity: "2", spending: "10" },
+    petrol: { quantity: "130", spending: "200" },
+    diesel: { quantity: "130", spending: "200" },
+    gas: { quantity: "65", spending: "90" },
+    beer: { quantity: "9", spending: "26", strength: "5" },
+    beerReduced: { quantity: "9", spending: "26", strength: "5" },
+    lightWine: { quantity: "4", spending: "35" },
+    wine: { quantity: "3", spending: "35" },
+    intermediate: { quantity: "2", spending: "35", strength: "18" },
+    spirits: { quantity: "2", spending: "52", strength: "40" },
+    cigarettes: { quantity: "2", spending: "13" },
+    heated: { quantity: "85", spending: "22" },
+    liquid: { quantity: "9", spending: "13" },
+    tobacco: { quantity: "43", spending: "22" },
+    other: { quantity: "9", spending: "45" },
   };
 
   const productHelp = {
@@ -74,23 +76,23 @@ const purchaseWeeksPerYear = 52;
     other: "PVM tarifą rasi pirkimo dokumente.",
   };
 
-  function taxForPurchase(key, weeklyQuantity, weeklyPrice, extra, vatRate, periodsPerYear = purchaseWeeksPerYear) {
+  function taxForPurchase(key, monthlyQuantity, monthlyPrice, extra, vatRate) {
     const product = products[key] ?? services[key];
     const pricePerLitre = averageFuelPrices[key];
     let estimate = "";
     let estimatedTax = null;
-    if (pricePerLitre && weeklyQuantity === null) {
-      weeklyQuantity = weeklyPrice / pricePerLitre;
+    if (pricePerLitre && monthlyQuantity === null) {
+      monthlyQuantity = monthlyPrice / pricePerLitre;
       estimatedTax = "excise";
-      estimate = "Akcizo įverčiui naudotas kiekis – apie " + quantityFormat.format(weeklyQuantity)
-        + " l per savaitę, pagal 2025 m. vidutinę kainą " + fuelPriceFormat.format(pricePerLitre) + " €/l.";
-    } else if (pricePerLitre && weeklyPrice === null) {
-      weeklyPrice = weeklyQuantity * pricePerLitre;
+      estimate = "Akcizo įverčiui naudotas kiekis – apie " + formatFuelQuantity(monthlyQuantity)
+        + " l per mėnesį, pagal 2025 m. vidutinę kainą " + fuelPriceFormat.format(pricePerLitre) + " €/l.";
+    } else if (pricePerLitre && monthlyPrice === null) {
+      monthlyPrice = monthlyQuantity * pricePerLitre;
       estimatedTax = "vat";
       estimate = "PVM įverčiui taikyta 2025 m. vidutinė kaina " + fuelPriceFormat.format(pricePerLitre) + " €/l.";
     }
-    const quantity = weeklyQuantity === null ? null : weeklyQuantity * periodsPerYear;
-    const price = weeklyPrice === null ? null : weeklyPrice * periodsPerYear;
+    const quantity = monthlyQuantity === null ? null : monthlyQuantity * purchaseMonthsPerYear;
+    const price = monthlyPrice === null ? null : monthlyPrice * purchaseMonthsPerYear;
     const vatOnly = key === "other" || Object.hasOwn(services, key);
     const missingExcise = !vatOnly && quantity === null;
     let excise = 0;
@@ -111,7 +113,7 @@ const purchaseWeeksPerYear = 52;
     const priceCents = price === null ? null : toCents(price);
     const taxExceedsPrice = priceCents !== null && exciseCents + vatCents > priceCents;
     const cigarettePriceExceedsMaximum = key === "cigarettes" && quantity !== null && price !== null && extra !== null
-      && toCents(weeklyPrice) > toCents(weeklyQuantity * extra);
+      && toCents(monthlyPrice) > toCents(monthlyQuantity * extra);
     const cigaretteMinimum = key === "cigarettes" && !missingExcise && extra === null;
     return {
       name: key === "intermediate" && extra !== null
@@ -121,7 +123,6 @@ const purchaseWeeksPerYear = 52;
       excise: exciseCents,
       vat: vatCents,
       price: priceCents,
-      weekly: periodsPerYear === purchaseWeeksPerYear,
       netPrice: priceCents === null || missingExcise || taxExceedsPrice || cigarettePriceExceedsMaximum
         ? null : priceCents - exciseCents - vatCents,
       vatOnly,
@@ -224,18 +225,12 @@ const purchaseWeeksPerYear = 52;
       ]);
       basis.wrapper.className += " purchase-basis";
       const quantity = makeInput(id + "-quantity", "");
-      const price = makeInput(id + "-price", "Išlaidos per savaitę", { currency: true });
+      const price = makeInput(id + "-price", "Išlaidos per mėnesį", { currency: true });
       const quantityRefinement = makeInput(id + "-known-quantity", "");
-      const priceRefinement = makeInput(id + "-known-price", "Išlaidos per savaitę (su PVM)", { currency: true });
+      const priceRefinement = makeInput(id + "-known-price", "Išlaidos per mėnesį (su PVM)", { currency: true });
       const unitPrice = makeInput(id + "-unit-price", "Kaina už vienetą su PVM", { currency: true, example: "5" });
-      const servicePrice = makeInput(id + "-service-price", "Išlaidos su PVM", { currency: true });
-      const servicePeriod = makeSelect(id + "-service-period", "Laikotarpis", [
-        { value: "month", text: "Vidutiniškai per mėnesį" },
-        { value: "year", text: "Iš viso per metus" },
-      ]);
-      servicePeriod.wrapper.className += " purchase-basis";
-      const serviceAmounts = { month: "", year: "" };
-      let activeServicePeriod = "month";
+      const servicePrice = makeInput(id + "-service-price", "Vidutinės mėnesio išlaidos", { currency: true });
+      servicePrice.wrapper.className += " purchase-service-price";
       const vatRate = makeSelect(id + "-vat-rate", "PVM tarifas", [
         { value: "", text: "Pasirinkti PVM tarifą" },
         ...[21, 9, 5].map((rate) => ({ value: String(rate), text: rate + " %" })),
@@ -267,10 +262,23 @@ const purchaseWeeksPerYear = 52;
         basis.input.value = ["alcohol", "tobacco"].includes(products[product.input.value]?.group) ? "quantity" : "amount";
       }
 
-      function updateServicePriceField(service) {
-        const monthly = servicePeriod.input.value === "month";
-        servicePrice.label.textContent = monthly ? "Vidutinės mėnesio išlaidos" : "2025 m. išlaidos";
-        servicePrice.input.placeholder = "Pvz., " + (monthly ? service.monthlyExample : service.monthlyExample * 12);
+      function updatePurchaseExamples() {
+        const key = product.input.value;
+        const examples = purchaseExamples[key];
+        if (!examples) return;
+        const pricePerLitre = averageFuelPrices[key];
+        quantity.input.placeholder = "Pvz., " + examples.quantity;
+        price.input.placeholder = "Pvz., " + examples.spending;
+        quantityRefinement.input.placeholder = quantity.input.placeholder;
+        priceRefinement.input.placeholder = price.input.placeholder;
+        if (!pricePerLitre) return;
+
+        const enteredSpending = parseInputNumber(price.input.value);
+        const enteredLitres = parseInputNumber(quantity.input.value);
+        const spending = enteredSpending >= 0.01 && enteredSpending <= 100_000_000 ? enteredSpending : Number(examples.spending);
+        const litres = enteredLitres >= 0.01 && enteredLitres <= 100_000_000 ? enteredLitres : Number(examples.quantity);
+        quantityRefinement.input.placeholder = "Pvz., " + formatFuelQuantity(spending / pricePerLitre);
+        priceRefinement.input.placeholder = "Pvz., " + amountFormat.format(litres * pricePerLitre);
       }
 
       function updateFields() {
@@ -283,9 +291,9 @@ const purchaseWeeksPerYear = 52;
           help.hidden = !service;
           help.textContent = "";
           if (service) {
-            updateServicePriceField(service);
+            servicePrice.input.placeholder = "Pvz., " + service.monthlyExample;
             servicePrice.input.required = true;
-            fields.append(servicePeriod.wrapper, servicePrice.wrapper);
+            fields.append(servicePrice.wrapper);
             if (service.vat === undefined) fields.append(vatRate.wrapper);
             help.textContent = service.vat === undefined
               ? "Įvesk sąskaitos sumą su PVM ir pasirink joje nurodytą tarifą. Skirtingiems tarifams pridėk atskiras eilutes."
@@ -297,10 +305,9 @@ const purchaseWeeksPerYear = 52;
         const selected = products[key];
         const examples = purchaseExamples[key];
         const byAmount = basis.input.value === "amount";
-        quantity.label.textContent = selected.unit + " per savaitę";
+        quantity.label.textContent = selected.unit + " per mėnesį";
         quantityRefinement.label.textContent = quantity.label.textContent;
-        quantity.input.placeholder = quantityRefinement.input.placeholder = "Pvz., " + examples.quantity;
-        price.input.placeholder = priceRefinement.input.placeholder = "Pvz., " + examples.spending;
+        updatePurchaseExamples();
         quantity.input.setAttribute("aria-describedby", help.id);
         quantityRefinement.input.setAttribute("aria-describedby", help.id);
         quantity.input.required = true;
@@ -339,26 +346,25 @@ const purchaseWeeksPerYear = 52;
           if (service) {
             const price = readField(servicePrice.input, { required: true, min: 0.01, decimals: 2 });
             if (service.vat === undefined && !vatRate.input.value) showError(vatRate.input, "Pasirink sąskaitoje nurodytą PVM tarifą.");
-            const periodsPerYear = servicePeriod.input.value === "month" ? 12 : 1;
-            return taxForPurchase(key, null, price, null, service.vat ?? Number(vatRate.input.value), periodsPerYear);
+            return taxForPurchase(key, null, price, null, service.vat ?? Number(vatRate.input.value));
           }
           const definition = products[key];
           const byAmount = basis.input.value === "amount";
           const quantityInput = byAmount ? quantityRefinement.input : quantity.input;
           const priceInput = byAmount ? price.input : priceRefinement.input;
           const isOther = key === "other";
-          const weeklyQuantity = isOther && byAmount ? null : readField(quantityInput, { required: !byAmount, min: 0.01 });
-          let weeklyPrice = isOther && !byAmount ? null : readField(priceInput, { required: byAmount, min: 0.01, decimals: 2 });
+          const monthlyQuantity = isOther && byAmount ? null : readField(quantityInput, { required: !byAmount, min: 0.01 });
+          let monthlyPrice = isOther && !byAmount ? null : readField(priceInput, { required: byAmount, min: 0.01, decimals: 2 });
           const rate = key === "other" ? Number(vatRate.input.value) : 21;
           if (isOther && !byAmount) {
             const cost = readField(unitPrice.input, { min: 0.01, decimals: 2 });
-            weeklyPrice = cost === null ? null : weeklyQuantity * cost;
-            if (weeklyPrice > 100_000_000) showError(unitPrice.input, "Bendra savaitės kaina gali būti iki 100 mln. €.");
+            monthlyPrice = cost === null ? null : monthlyQuantity * cost;
+            if (monthlyPrice > 100_000_000) showError(unitPrice.input, "Bendra mėnesio kaina gali būti iki 100 mln. €.");
           }
           let extraValue = null;
-          if (weeklyQuantity !== null && key === "cigarettes") {
+          if (monthlyQuantity !== null && key === "cigarettes") {
             extraValue = readField(maxRetail.input, { min: 0.01, max: 10000, decimals: 2 });
-          } else if (weeklyQuantity !== null && definition.aboveStrength !== undefined) {
+          } else if (monthlyQuantity !== null && definition.aboveStrength !== undefined) {
             extraValue = readField(strength.input, { required: true, max: 100 });
             if (extraValue <= definition.aboveStrength) {
               const lowerBound = definition.aboveStrength.toLocaleString("lt-LT");
@@ -368,9 +374,9 @@ const purchaseWeeksPerYear = 52;
               showError(strength.input, "Šios grupės gėrimo stiprumas negali viršyti " + definition.maxStrength + " %. Patikrink gėrimo rūšį etiketėje.");
             }
           }
-          const tax = taxForPurchase(key, weeklyQuantity, weeklyPrice, extraValue, rate);
+          const tax = taxForPurchase(key, monthlyQuantity, monthlyPrice, extraValue, rate);
           if (tax.taxExceedsPrice) {
-            showError(priceInput, "Apskaičiuoti mokesčiai viršija įvestą kainą. Patikrink, ar įrašei savaitės sumą už visą kiekį.");
+            showError(priceInput, "Apskaičiuoti mokesčiai viršija įvestą kainą. Patikrink, ar įrašei mėnesio sumą už visą kiekį.");
           }
           priceWarning.hidden = !tax.cigarettePriceExceedsMaximum;
           priceWarning.textContent = tax.cigarettePriceExceedsMaximum
@@ -388,20 +394,14 @@ const purchaseWeeksPerYear = 52;
       product.input.addEventListener("change", () => {
         for (const field of [quantity, price, quantityRefinement, priceRefinement, unitPrice, strength, maxRetail, servicePrice]) field.input.value = "";
         vatRate.input.value = product.input.value === "otherService" ? "" : "21";
-        serviceAmounts.month = serviceAmounts.year = "";
-        activeServicePeriod = servicePeriod.input.value = "month";
         priceWarning.hidden = true;
         priceWarning.textContent = "";
         refine.open = false;
         resetBasis();
         updateFields();
       });
-      servicePeriod.input.addEventListener("change", () => {
-        serviceAmounts[activeServicePeriod] = servicePrice.input.value;
-        activeServicePeriod = servicePeriod.input.value;
-        servicePrice.input.value = serviceAmounts[activeServicePeriod];
-        updateServicePriceField(services[product.input.value]);
-      });
+      price.input.addEventListener("input", updatePurchaseExamples);
+      quantity.input.addEventListener("input", updatePurchaseExamples);
       basis.input.addEventListener("change", () => {
         const byAmount = basis.input.value === "amount";
         const secondary = byAmount ? quantityRefinement : product.input.value === "other" ? unitPrice : priceRefinement;

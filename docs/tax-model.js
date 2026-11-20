@@ -4,6 +4,12 @@ const currency = new Intl.NumberFormat("lt-LT", { style: "currency", currency: "
 const shortCurrency = new Intl.NumberFormat("lt-LT", { style: "currency", currency: "EUR", maximumFractionDigits: 2, minimumFractionDigits: 0 });
 const money = (cents) => currency.format(cents / 100);
 const compactMoney = (cents) => shortCurrency.format(cents / 100);
+
+function parseInputNumber(input) {
+  const raw = input.trim();
+  if (!/^(?:\d+|\d{1,3}(?:[ \u00a0\u202f]\d{3})+)(?:[,.]\d+)?$/.test(raw)) return null;
+  return Number(raw.replace(/\s/g, "").replace(",", "."));
+}
 function toCents(euros) {
   const scaled = euros * 100;
   return Math.round(scaled + Number.EPSILON * Math.max(1, Math.abs(scaled)));

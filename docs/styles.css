@@ -207,6 +207,7 @@ details[open] .details-icon { transform: rotate(45deg); }
 .purchase-head { grid-template-columns: minmax(0, 1fr) auto; }
 .purchase-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 9px; }
 .purchase-fields .field:has(select):not(.purchase-basis) { grid-column: 1 / -1; }
+.purchase-fields .purchase-service-price { grid-column: 1 / -1; }
 .purchase-refine summary { min-height: 32px; }
 .purchase-refine .purchase-fields { margin-top: 5px; }
 .purchase-row .field label { font-size: .78rem; }
@@ -218,6 +219,7 @@ details[open] .details-icon { transform: rotate(45deg); }
 .summary-group { padding-block: 12px 2px; }
 .summary-group + .summary-group { border-top: 1px solid #dce3e1; }
 .summary-group h3 { color: #49625f; font-size: .72rem; font-weight: 760; letter-spacing: .06em; text-transform: uppercase; }
+.summary-group--primary h3 { color: var(--teal); font-size: 1.12rem; letter-spacing: 0; text-transform: none; }
 .summary-group dl > div:first-child { padding-top: 9px; }
 .breakdown dl > div { padding-block: 9px; }
 .purchase-summary { padding-block: 7px; border-top: 1px solid #dce3e1; }

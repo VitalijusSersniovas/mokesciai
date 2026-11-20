@@ -168,12 +168,9 @@
 
   function reportPurchaseDetails(purchases) {
     if (!purchases?.length) return "";
-    const periods = [];
-    if (purchases.some((item) => item.weekly !== false)) periods.push("Savaitės išlaidos perskaičiuotos pagal 52 savaites.");
-    if (purchases.some((item) => item.weekly === false)) periods.push("Paslaugų sumos įvestos už metus arba apskaičiuotos padauginus mėnesio vidurkį iš 12.");
     return `<section aria-labelledby="tax-report-purchases-heading">
       <h2 id="tax-report-purchases-heading">Metinės sumos pagal prekę ar paslaugą</h2>
-      <p>${periods.join(" ")}</p>
+      <p>Mėnesio kiekius ir išlaidas padauginome iš 12.</p>
       <ul class="tax-report-purchases" role="list">
         ${purchases.map((item) => `<li>
           <h3>${escapeHtml(item.name)}</h3>
