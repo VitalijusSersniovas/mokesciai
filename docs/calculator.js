@@ -729,6 +729,7 @@ function renderResult(announce = false) {
 
 function renderPublicSpendingContext() {
   const notes = [
+    ["spending-publication", spendingPublication, spendingPublicationEurostat],
     ["spending-coverage", spendingCoverage],
     ["spending-defence-context", defenceBudgetContext, defenceBudgetSource],
   ];
@@ -795,6 +796,8 @@ function reportData(includePurchases) {
       rows: area.groups.map((group) => [group.name + " · " + group.code, groupDisplayAmount(group), group.description]),
     })),
     spendingSource,
+    spendingPublication,
+    spendingPublicationEurostat,
     spendingCoverage,
     defenceBudgetContext,
     defenceBudgetSource,

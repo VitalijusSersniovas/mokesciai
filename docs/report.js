@@ -153,6 +153,8 @@
     return `<section class="tax-report-spending-details" aria-labelledby="tax-report-spending-heading">
       <h2 id="tax-report-spending-heading">Išlaidų papunkčiai</h2>
       <p>${escapeHtml(spendingBasis(data.spendingYear))}</p>
+      ${data.spendingPublication ? `<p><strong>Kada laukiama 2025 m. išklotinės?</strong> ${escapeHtml(data.spendingPublication.text)}
+        ${sourceLink(data.spendingPublication)} ${data.spendingPublicationEurostat ? sourceLink(data.spendingPublicationEurostat) : ""}</p>` : ""}
       ${data.spendingCoverage ? `<p>${escapeHtml(data.spendingCoverage.text)} ${sourceLink(data.spendingCoverage)}</p>` : ""}
       ${data.defenceBudgetContext ? `<p>${escapeHtml(data.defenceBudgetContext.text)} ${sourceLink(data.defenceBudgetContext)}
         ${data.defenceBudgetSource ? sourceLink(data.defenceBudgetSource) : ""}</p>` : ""}
@@ -434,6 +436,9 @@
       ].filter(Boolean).join("\n"))),
       spendingDetails.length ? paragraph("Išlaidų papunkčiai", [
         spendingBasis(data.spendingYear),
+        data.spendingPublication?.text,
+        ...sourceLines(data.spendingPublication),
+        ...sourceLines(data.spendingPublicationEurostat),
         data.spendingCoverage?.text,
         ...sourceLines(data.spendingCoverage),
         data.defenceBudgetContext?.text,

@@ -9,8 +9,17 @@ const spendingSource = {
   source: "Eurostatas · 2024 m. Lietuvos valdžios sektoriaus išlaidos (COFOG)",
   url: "https://ec.europa.eu/eurostat/databrowser/view/gov_10a_exp/default/table?lang=en",
 };
+const spendingPublication = {
+  text: "Valstybės duomenų agentūros kalendoriuje išlaidų lentelės atnaujinimas numatytas 2026 m. gruodžio 18 d. Pagal įprastą Eurostato grafiką išsamios 2025 m. išklotinės tikimasi apie 2027 m. vasarį.",
+  source: "VDA · Išlaidų lentelės atnaujinimas",
+  url: "https://osp.stat.gov.lt/valdzios-sektoriaus-finansai",
+};
+const spendingPublicationEurostat = {
+  source: "Eurostatas · Skelbimo grafikas",
+  url: "https://ec.europa.eu/eurostat/cache/metadata/en/gov_10a_exp_esms.htm",
+};
 const spendingCoverage = {
-  text: "Paskutinė visų sričių išklotinė yra už 2024 m. Iš 2025 m. paskelbtų duomenų matyti, kad gynybai teko 2,28 mlrd. € (6,55 % visų valdžios sektoriaus išlaidų). Visų sričių ir papunkčių 2025 m. išklotinė dar nepaskelbta.",
+  text: "Už 2025 m. jau paskelbta bendra išlaidų suma ir gynybos išlaidos. Gynybai teko 2,28 mlrd. € (6,55 % visų valdžios sektoriaus išlaidų).",
   source: "Valstybės duomenų agentūra · 2025 m. valdžios sektoriaus išlaidos",
   url: "https://osp-rs.stat.gov.lt/rest_json/data/S7R229_M2040214/?startPeriod=2024&endPeriod=2026",
 };

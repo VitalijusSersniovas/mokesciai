@@ -311,6 +311,11 @@ test('reports explain the latest comparable spending year and place 2025 institu
   const { document, report, files } = setup();
   report.open({
     ...data, comparison: null,
+    spendingPublication: {
+      text: 'Lentelės atnaujinimas numatytas 2026 m. gruodžio 18 d. Išklotinės tikimasi apie 2027 m. vasarį.',
+      source: 'VDA skelbimo kalendorius', url: 'https://example.org/vda',
+    },
+    spendingPublicationEurostat: { source: 'Eurostato grafikas', url: 'https://example.org/eurostat' },
     spendingCoverage: { text: 'Naujausi palyginami duomenys už 2024 m.', source: 'Valstybės biudžetas', url: 'https://example.org/2025' },
     defenceBudgetContext: { text: 'Gynybai numatyta 5,38 % BVP.', source: 'Gynybos planas', url: 'https://example.org/2026' },
     institutions: {
@@ -323,6 +328,8 @@ test('reports explain the latest comparable spending year and place 2025 institu
   const printCopy = document.body.find((element) => element.classes.has('tax-report-print-copy'));
   for (const markup of [preview.innerHTML, printCopy.innerHTML, await files[0].text()]) {
     assert.match(markup, /tax-report-preliminary.*Preliminarus skaičiavimas pagal įvestus duomenis/u);
+    assert.match(markup, /Kada laukiama 2025 m. išklotinės\?.*2026 m. gruodžio 18 d\..*2027 m. vasarį/u);
+    assert.ok(markup.includes('href="https://example.org/vda"') && markup.includes('href="https://example.org/eurostat"'));
     assert.match(markup, /Naujausi palyginami duomenys už 2024 m\..*href="https:\/\/example.org\/2025"/u);
     assert.match(markup, /Gynybai numatyta 5,38 % BVP/u);
     assert.ok(markup.indexOf('Išlaidų papunkčiai') < markup.indexOf('<h3>LRT</h3>'));
@@ -331,6 +338,7 @@ test('reports explain the latest comparable spending year and place 2025 institu
   }
   const text = dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value;
   assert.match(text, /Preliminarus skaičiavimas pagal įvestus duomenis/u);
+  assert.match(text, /2026 m. gruodžio 18 d\..*2027 m. vasarį/u);
   assert.ok(text.indexOf('Išlaidų papunkčiai') < text.indexOf('LRT · 27,57 € per metus'));
 });
 

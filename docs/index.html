@@ -21,15 +21,15 @@
   <title>Kur keliauja tavo mokesčiai?</title>
   <link rel="stylesheet" href="./styles.css?v=ataskaita-20261120">
   <script src="./tax-model.js?v=tarifai-20261120" defer></script>
-  <script src="./spending-data.js?v=ataskaita-20261120" defer></script>
+  <script src="./spending-data.js?v=islaidu-metai-20261120" defer></script>
   <script src="./insurance-spending.js?v=tarifai-20261120" defer></script>
   <script src="./purchases.js?v=ataskaita-20261120" defer></script>
-  <script src="./report.js?v=ataskaita-20261120" defer></script>
+  <script src="./report.js?v=islaidu-metai-20261120" defer></script>
   <script src="./comparison.js?v=tarifai-20261120" defer></script>
   <script src="./share-card.js?v=macbook-20261120" defer></script>
   <script src="./sharing.js?v=ataskaita-20261120" defer></script>
   <script src="./defence-fund.js?v=tarifai-20261120" defer></script>
-  <script src="./calculator.js?v=ataskaita-20261120" defer></script>
+  <script src="./calculator.js?v=islaidu-metai-20261120" defer></script>
 </head>
 <body>
   <a class="skip" href="#skaiciuokle">Pereiti prie skaičiuoklės</a>
@@ -400,7 +400,8 @@
         <button type="button" role="tab" id="spending-insurance-tab" aria-controls="contributions" aria-selected="false" tabindex="-1">GPM, VSD ir PSD išklotinė</button>
       </div>
       <div class="spending-view" id="spending-overview" role="tabpanel" aria-labelledby="spending-overview-tab" tabindex="0">
-        <p class="spending-context">Čia matyti, kaip tavo <strong>apskaičiuota metinė mokesčių ir įmokų suma</strong> pasiskirstytų pagal faktines <strong>2024 m. Lietuvos viešųjų išlaidų proporcijas</strong>. Rodomi įverčiai.</p>
+        <p class="spending-context">Tavo metinės mokesčių ir įmokų sumos paskirstymą įvertiname pagal <strong>2024 m. faktinių viešųjų išlaidų proporcijas</strong>. Tai naujausia paskelbta išsami viso valdžios sektoriaus išlaidų išklotinė.</p>
+        <p class="spending-context spending-year-note"><strong>Kada laukiama 2025 m. išklotinės?</strong> <span id="spending-publication"></span></p>
         <p class="spending-context spending-year-note" id="spending-coverage"></p>
         <p class="spending-context spending-year-note" id="spending-defence-context"></p>
         <p class="stale-message comparison-stale" id="stale-spending" hidden>Rodomas paskutinis skaičiavimas. Perskaičiuok pakeistus duomenis.</p>
