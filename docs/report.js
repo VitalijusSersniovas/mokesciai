@@ -384,7 +384,7 @@
       data.example ? "Pavyzdys pagal numatytąjį atlyginimą." : "",
       `Metiniai mokesčiai ir įmokos · ${data.total}`,
       resultCaveat(data),
-      data.wageEquivalent ? "Atlyginimo mokesčiai ir įmokos prilygsta " + data.wageEquivalent + " atlyginimo ant popieriaus." : "",
+      data.wageEquivalent ? "Bendra metinė mokesčių ir įmokų suma prilygsta " + data.wageEquivalent + " atlyginimo ant popieriaus." : "",
       ...data.rows.map(([label, amount]) => `${label} · ${amount}`),
       "Preliminarus skaičiavimas.",
       safeShareUrl(data.url),

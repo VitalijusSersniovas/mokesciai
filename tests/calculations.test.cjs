@@ -195,7 +195,10 @@ test('net-to-gross can use no payroll NPD without changing the annual entitlemen
   assert.ok(wageTaxes(gross).tax < withheld.tax);
 });
 
-test('wage comparison uses employee wage taxes and contributions as months of gross wages', () => {
-  assert.equal(wageTaxMonths({gross: 2400000, ...wageTaxes(24000)}), 4.409255);
-  assert.equal(wageTaxMonths({gross: 0, ...wageTaxes(0)}), null);
+test('wage comparison uses the same total as the summary, including purchase taxes', () => {
+  assert.equal(wageTaxMonths(881851, 2400000), 4.409255);
+  const wageTaxesAndContributions = 348833 + 273163 + 152291;
+  const purchaseTaxes = 214116 + 72431;
+  assert.equal(wageTaxMonths(wageTaxesAndContributions + purchaseTaxes, 2181817).toFixed(1), '5.8');
+  assert.equal(wageTaxMonths(1060834, 0), null);
 });

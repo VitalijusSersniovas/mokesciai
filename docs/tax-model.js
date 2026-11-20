@@ -99,8 +99,8 @@ function grossWagesFromNet(annualNet, higherMonths = 0, lowerMonths = 0, accrued
   return closest / 100;
 }
 
-function wageTaxMonths({gross, tax, vsd, psd}) {
-  return gross > 0 ? 12 * (tax + vsd + psd) / gross : null;
+function wageTaxMonths(annualTaxCents, annualGrossCents) {
+  return annualGrossCents > 0 ? 12 * annualTaxCents / annualGrossCents : null;
 }
 
 function selfEmploymentTaxes(revenue, actualExpenses, minPsdMonths, exemptVsd, carriedLoss = 0) {

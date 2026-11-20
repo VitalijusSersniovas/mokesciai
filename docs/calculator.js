@@ -518,8 +518,8 @@ function wageEstimate() {
     + (result.pension ? " II pakopos įmoka (" + money(result.pension) + ") panaudota perskaičiavimui." : "");
 }
 
-function wageEquivalent() {
-  const months = result.mode === "wages" ? wageTaxMonths(result) : null;
+function wageEquivalent(total) {
+  const months = result.mode === "wages" ? wageTaxMonths(total, result.gross) : null;
   if (months === null) return null;
   const value = months > 0 && months < 0.05 ? "Mažiau nei 0,1" : wageMonthsFormat.format(months);
   return { months, label: value + " mėn." };
@@ -531,11 +531,13 @@ function renderResult(announce = false) {
   const automatic = isEstimatedIncome();
   element("result-heading").textContent = automatic ? "Apskaičiuota mokesčių ir įmokų suma" : "Mokesčių ir įmokų suma pagal įvestį";
   element("total-amount").textContent = money(total);
-  const equivalent = wageEquivalent();
+  const equivalent = wageEquivalent(total);
   element("wage-equivalent").hidden = equivalent === null;
   if (equivalent) {
     element("wage-equivalent-value").textContent = equivalent.label;
-    element("wage-equivalent-fill").style.width = (equivalent.months / 12 * 100) + "%";
+    element("wage-equivalent-fill").style.width = Math.min(equivalent.months / 12 * 100, 100) + "%";
+    element("wage-equivalent-calculation").textContent = money(total) + " ÷ " + money(Math.round(result.gross / 12))
+      + ". Į bendrą sumą įeina ir pirkinių mokesčiai.";
   }
   const baseDetails = element("tax-bases");
   baseDetails.hidden = !result.bases?.length;
@@ -576,7 +578,7 @@ function reportData(includePurchases) {
   if (result.mode === "pension") notes.push(includePurchases ? pensionNote() : pensionTaxNote);
   return {
     year: taxYear,
-    wageEquivalent: wageEquivalent()?.label,
+    wageEquivalent: wageEquivalent(total)?.label,
     example: !!result.example,
     mode: result.caption,
     total: money(total),

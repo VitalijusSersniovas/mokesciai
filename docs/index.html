@@ -20,16 +20,16 @@
   <meta name="theme-color" content="#f5f5ef">
   <title>Kur keliauja tavo mokesčiai?</title>
   <link rel="stylesheet" href="./styles.css?v=monthly-20261120">
-  <script src="./tax-model.js?v=monthly-20261120" defer></script>
+  <script src="./tax-model.js?v=wage-equivalent-20261120" defer></script>
   <script src="./spending-data.js" defer></script>
   <script src="./insurance-spending.js" defer></script>
   <script src="./purchases.js?v=monthly-20261120" defer></script>
-  <script src="./report.js?v=monthly-20261120" defer></script>
+  <script src="./report.js?v=wage-equivalent-20261120" defer></script>
   <script src="./comparison.js" defer></script>
   <script src="./share-card.js" defer></script>
   <script src="./sharing.js" defer></script>
   <script src="./defence-fund.js" defer></script>
-  <script src="./calculator.js?v=monthly-20261120" defer></script>
+  <script src="./calculator.js?v=wage-equivalent-20261120" defer></script>
 </head>
 <body>
   <a class="skip" href="#skaiciuokle">Pereiti prie skaičiuoklės</a>
@@ -275,7 +275,7 @@
             <h3>Kiek jūsų atlyginimų sudaro per metus sumokėtų mokesčių?</h3>
             <p><strong id="wage-equivalent-value"></strong> atlyginimo ant popieriaus</p>
             <div class="wage-equivalent-track" aria-hidden="true"><span id="wage-equivalent-fill"></span></div>
-            <p class="field-help">Palyginimui naudojami darbuotojo GPM, VSD ir PSD.</p>
+            <p class="field-help" id="wage-equivalent-calculation"></p>
           </div>
           <div id="income-summary" class="summary-group summary-group--primary">
             <h3>Per metus sumokėti mokesčiai</h3>

@@ -312,11 +312,12 @@ test('summary stays manually selectable if clipboard and device sharing fail', a
     clipboard: { async writeText() { throw Error('Clipboard blocked'); } },
     async share() { throw Error('Sharing blocked'); },
   });
-  report.openShare(data);
+  report.openShare({ ...data, wageEquivalent: '5,8 mėn.' });
   const dialog = document.body.find((element) => element.tag === 'dialog');
   const field = dialog.find((element) => element.tag === 'textarea');
   assert.equal(field.readOnly, true);
   assert.match(field.value, /Pavyzdys pagal numatytąjį atlyginimą/u);
+  assert.match(field.value, /Bendra metinė mokesčių ir įmokų suma prilygsta 5,8 mėn. atlyginimo ant popieriaus/u);
   assert.match(field.value, /GPM · 67,50 €\nVSD · 32,40 €\nPSD · 0,10 €/u);
   assert.match(field.value, /https:\/\/example.org\//u);
   assert.doesNotMatch(field.value, /Privati informacija|pirkinių informacija|secret|Pienas|Aukštasis mokslas|Pensijos|PSDF ataskaita|išklotinė|biudžetams|VSD ir PSD dalis bendroje sumoje/u);
