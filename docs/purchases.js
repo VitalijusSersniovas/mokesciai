@@ -62,7 +62,7 @@ const purchaseMonthsPerYear = 12;
       beer: { price: 1.59, size: 0.5, unit: "l", description: "Vietinės gamybos alus parduotuvėje", source: numbeoRetailSource },
       wine: { price: 8, size: 0.75, unit: "l", description: "Vidutinės kainos vynas. Pavyzdyje laikome, kad butelyje yra 0,75 l", source: numbeoRetailSource },
       cigarettes: {
-        price: 5.18, size: 1, unit: "pak.", description: "Svertinė didžiausia mažmeninė kaina už 20 cigarečių",
+        price: 5.18, size: 1, unit: "pak.", description: "Oficialus svertinės cigarečių kainos orientyras (20 vnt.)",
         source: {
           name: "Finansų ministerija · taikoma nuo 2026-03-01",
           url: "https://www.e-tar.lt/portal/lt/legalActPrint?documentId=aa4d6c8612d911f1a552c76556910e9c",
@@ -174,9 +174,8 @@ const purchaseMonthsPerYear = 12;
     const missingExcise = !vatOnly && quantity === null;
     let excise = 0;
     if (!missingExcise && key === "cigarettes") {
-      const maximumRetail = extra === null ? (price ?? 0) : extra * quantity;
       const { minimumPerPack, specificPerPack } = rules.cigarettes;
-      excise = Math.max(minimumPerPack * quantity, specificPerPack * quantity + 0.25 * maximumRetail);
+      excise = Math.max(minimumPerPack * quantity, specificPerPack * quantity + 0.25 * (price ?? 0));
     } else if (!missingExcise && !vatOnly) {
       let exciseRate = rules.excise[key];
       if (key === "intermediate") {
@@ -190,9 +189,7 @@ const purchaseMonthsPerYear = 12;
     const vatCents = price === null ? 0 : vatInPrice(price, vatRate);
     const priceCents = price === null ? null : toCents(price);
     const taxExceedsPrice = priceCents !== null && exciseCents + vatCents > priceCents;
-    const cigarettePriceExceedsMaximum = key === "cigarettes" && quantity !== null && price !== null && extra !== null
-      && toCents(monthlyPrice) > toCents(monthlyQuantity * extra);
-    const cigaretteMinimum = key === "cigarettes" && !missingExcise && extra === null;
+    const hasCigaretteQuantity = key === "cigarettes" && !missingExcise;
     return {
       name: key === "intermediate" && extra !== null
         ? product.label + " · " + extra.toLocaleString("lt-LT", { maximumFractionDigits: 15 }) + " %"
@@ -200,7 +197,7 @@ const purchaseMonthsPerYear = 12;
       excise: exciseCents,
       vat: vatCents,
       price: priceCents,
-      netPrice: priceCents === null || missingExcise || taxExceedsPrice || cigarettePriceExceedsMaximum
+      netPrice: priceCents === null || missingExcise || taxExceedsPrice
         ? null : priceCents - exciseCents - vatCents,
       vatOnly,
       missingPrice: price === null && vatRate > 0,
@@ -208,9 +205,8 @@ const purchaseMonthsPerYear = 12;
       estimate,
       estimatedTax,
       taxExceedsPrice: !estimate && taxExceedsPrice,
-      cigarettePriceExceedsMaximum,
-      minCigarette: cigaretteMinimum && price === null,
-      estimatedCigarette: cigaretteMinimum && price !== null,
+      minCigarette: hasCigaretteQuantity && price === null,
+      estimatedCigarette: hasCigaretteQuantity && price !== null,
     };
   }
 
@@ -314,9 +310,7 @@ const purchaseMonthsPerYear = 12;
       const priceGuide = create("p", {
         className: "field-help", id: id + "-price-guide", textContent: "Suma su PVM. Taros užstato neįtrauk.",
       });
-      const priceWarning = create("p", { className: "field-help", id: id + "-price-warning", hidden: true });
-      priceWarning.setAttribute("role", "status");
-      price.input.setAttribute("aria-describedby", priceGuide.id + " " + priceWarning.id);
+      price.input.setAttribute("aria-describedby", priceGuide.id);
       const help = create("p", { className: "field-help", id: id + "-help" });
       const estimateGuide = create("p", { className: "field-help", id: id + "-estimate-guide" });
       const priceExample = create("p", { className: "purchase-price-example", id: id + "-price-example", hidden: true });
@@ -326,7 +320,6 @@ const purchaseMonthsPerYear = 12;
       const priceExampleSource = create("a", { id: id + "-price-example-source" });
       priceExample.append(priceExampleAmount, priceExampleBasis, priceExampleSource);
       const strength = makeInput(id + "-strength", "Stiprumas (%)");
-      const maxRetail = makeInput(id + "-max-retail", "Didžiausia kaina, nurodyta ant pakelio", { currency: true, example: "6" });
       const refine = create("details", { className: "field-details purchase-refine" });
       const refineTitle = create("summary");
       const refineIcon = create("span", { className: "details-icon", textContent: "+" });
@@ -440,6 +433,7 @@ const purchaseMonthsPerYear = 12;
           estimateGuide.textContent = pricePerLitre
             ? "Jei išlaidų neįvesi, PVM įvertinsime pagal šią kainą."
             : "PVM apskaičiuosime, jei įrašysi savo išlaidas.";
+          if (key === "cigarettes") estimateGuide.textContent += " Pagal išlaidas taip pat įvertinsime akcizą.";
         }
         estimateGuide.hidden = !estimateGuide.textContent;
 
@@ -452,7 +446,6 @@ const purchaseMonthsPerYear = 12;
         if (!refine.hidden) {
           refineFields.append(byAmount ? quantityRefinement.wrapper : vatOnly ? unitPrice.wrapper : priceRefinement.wrapper);
           if (byAmount && hasStrength) refineFields.append(strength.wrapper);
-          if (key === "cigarettes") refineFields.append(maxRetail.wrapper);
         }
       }
 
@@ -488,9 +481,7 @@ const purchaseMonthsPerYear = 12;
             if (monthlyPrice > 100_000_000) showError(unitPrice.input, "Bendra mėnesio kaina gali būti iki 100 mln. €.");
           }
           let extraValue = null;
-          if (monthlyQuantity !== null && key === "cigarettes") {
-            extraValue = readField(maxRetail.input, { min: 0.01, max: 10000, decimals: 2 });
-          } else if (monthlyQuantity !== null && definition.aboveStrength !== undefined) {
+          if (monthlyQuantity !== null && definition.aboveStrength !== undefined) {
             extraValue = readField(strength.input, { required: true, max: 100 });
             if (extraValue <= definition.aboveStrength) {
               const lowerBound = definition.aboveStrength.toLocaleString("lt-LT");
@@ -504,25 +495,15 @@ const purchaseMonthsPerYear = 12;
           if (tax.taxExceedsPrice) {
             showError(priceInput, "Apskaičiuoti mokesčiai viršija įvestą kainą. Patikrink, ar įrašei mėnesio sumą už visą kiekį.");
           }
-          priceWarning.hidden = !tax.cigarettePriceExceedsMaximum;
-          priceWarning.textContent = tax.cigarettePriceExceedsMaximum
-            ? "Įvesta suma viršija didžiausią pakelių kainą. Patikrink kiekius ir pakelių kainas."
-            : "";
           return tax;
         },
       };
       resetBasis();
       entry.refresh();
       if (otherOnly) vatRate.input.value = "21";
-      row.addEventListener("input", () => {
-        priceWarning.hidden = true;
-        priceWarning.textContent = "";
-      });
       product.input.addEventListener("change", () => {
-        for (const field of [quantity, price, quantityRefinement, priceRefinement, unitPrice, strength, maxRetail, servicePrice]) field.input.value = "";
+        for (const field of [quantity, price, quantityRefinement, priceRefinement, unitPrice, strength, servicePrice]) field.input.value = "";
         vatRate.input.value = product.input.value === "otherService" ? "" : "21";
-        priceWarning.hidden = true;
-        priceWarning.textContent = "";
         refine.open = false;
         resetBasis();
         updateFields();
@@ -532,9 +513,7 @@ const purchaseMonthsPerYear = 12;
       basis.input.addEventListener("change", () => {
         const byAmount = basis.input.value === "amount";
         const secondary = byAmount ? quantityRefinement : product.input.value === "other" ? unitPrice : priceRefinement;
-        refine.open = !!(secondary.input.value.trim() || maxRetail.input.value.trim());
-        priceWarning.hidden = true;
-        priceWarning.textContent = "";
+        refine.open = !!secondary.input.value.trim();
         updateFields();
       });
       remove.addEventListener("click", () => {
@@ -545,7 +524,7 @@ const purchaseMonthsPerYear = 12;
         (next?.focus ?? addButton).focus();
         notify();
       });
-      row.append(header, fields, priceGuide, priceExample, help, estimateGuide, refine, priceWarning);
+      row.append(header, fields, priceGuide, priceExample, help, estimateGuide, refine);
       rows.push(entry);
       listElement.append(row);
       entry.focus.focus();

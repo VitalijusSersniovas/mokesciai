@@ -257,8 +257,9 @@ test('expenses alone estimate petrol excise and use actual VAT without old quant
   assert.equal(refined.estimatedTax, null);
 });
 
-test('printed cigarette pack price, actual price and legal floor have distinct meanings', () => {
+test('cigarettes use the legal floor with only a quantity and estimate excise from spending', () => {
   const form = purchaseForm('cigarettes');
+  assert.equal(form.field('max-retail'), undefined);
   form.fill('quantity', 1);
   let row = form.result();
   assert.equal(row.excise, 3593);
@@ -270,24 +271,13 @@ test('printed cigarette pack price, actual price and legal floor have distinct m
   row = form.result();
   assert.equal(row.excise, 3722);
   assert.equal(row.estimatedCigarette, true);
-
-  form.fill('max-retail', 4);
-  row = form.result();
-  assert.equal(row.excise, 3593);
-  assert.equal(row.cigarettePriceExceedsMaximum, true);
-  assert.equal(row.netPrice, null);
-  assert.equal(form.field('price-warning').hidden, false);
-
-  form.fill('max-retail', '5,75');
-  row = form.result();
-  assert.equal(row.excise, 3947);
-  assert.equal(row.cigarettePriceExceedsMaximum, false);
+  assert.equal(row.vat, 1041);
 
   form.fill('quantity', '0,5');
   form.fill('known-price', '2,88');
   row = form.result();
-  assert.equal(row.excise, 1974);
-  assert.equal(row.cigarettePriceExceedsMaximum, false);
+  assert.equal(row.excise, 1975);
+  assert.equal(row.estimatedCigarette, true);
 });
 
 test('beer uses exclusive ABV threshold and known reduced rate', () => {
@@ -438,7 +428,6 @@ test('2026 annualized excise uses 2026 units and selected product category', () 
 
   const cigarettes = purchaseForm('cigarettes', 2026);
   cigarettes.fill('quantity', 1);
-  cigarettes.fill('max-retail', 6);
   cigarettes.fill('known-price', 6);
   assert.equal(cigarettes.result().excise, 4212);
 });

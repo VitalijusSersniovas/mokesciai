@@ -352,8 +352,7 @@ function purchaseCaveats() {
   if (result.purchases.some((item) => item.missingExcise)) warnings.push("Kai kuriems pirkiniams be kiekio akcizas neapskaičiuotas.");
   if (result.purchases.some((item) => item.estimate)) warnings.push("Degalams, kurių kiekis ar kaina neįvesti, taikytos prie pirkinių nurodytos vidutinės kainos.");
   if (result.purchases.some((item) => item.minCigarette)) warnings.push("Cigaretėms be kainos rodoma mažiausia akcizo suma.");
-  if (result.purchases.some((item) => item.estimatedCigarette)) warnings.push("Kai didžiausia cigarečių kaina nenurodyta, akcizas įvertintas pagal pirkimo išlaidas.");
-  if (result.purchases.some((item) => item.cigarettePriceExceedsMaximum)) warnings.push("Cigarečių pirkimo kaina viršija įvestą didžiausią mažmeninę kainą.");
+  if (result.purchases.some((item) => item.estimatedCigarette)) warnings.push("Cigarečių akcizas apytiksliai įvertintas pagal pirkimo išlaidas.");
   return warnings.length ? "Suma pagal turimus duomenis. " + warnings.join(" ") : "";
 }
 
@@ -376,7 +375,6 @@ function purchaseResultRow(item) {
   if (item.netPrice === null) {
     if (item.price === null) missing = "Įvesk pirkimo kainą.";
     else if (item.missingExcise) missing = "Įvesk kiekį akcizui apskaičiuoti.";
-    else if (item.cigarettePriceExceedsMaximum) missing = "Patikrink pakelių kiekį ir jų kainas.";
     else missing = "Apskaičiuoti mokesčiai viršija kainą.";
   }
   return {
@@ -756,17 +754,14 @@ function renderPublicSpendingContext() {
     annual.className = "institution-budget-annual";
     const value = document.createElement("strong");
     value.textContent = item.annual;
-    annual.append(value, " per metus");
-    const monthly = document.createElement("p");
-    monthly.className = "institution-budget-monthly";
-    monthly.textContent = item.monthly + " per mėnesį";
+    annual.append(value, " per metus vienam gyventojui");
     const used = document.createElement("p");
     used.className = "institution-budget-total";
     used.textContent = "Panaudota " + item.used;
     const source = document.createElement("a");
     source.href = item.url;
     source.textContent = item.source;
-    row.append(heading, annual, monthly, used, source);
+    row.append(heading, annual, used, source);
     list.append(row);
   }
 }

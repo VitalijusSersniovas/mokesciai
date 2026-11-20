@@ -320,7 +320,10 @@ test('reports explain the latest comparable spending year and place 2025 institu
     defenceBudgetContext: { text: 'Gynybai numatyta 5,38 % BVP.', source: 'Gynybos planas', url: 'https://example.org/2026' },
     institutions: {
       year: 2025, population: '2 889 128',
-      rows: [{ name: 'LRT', used: '79 641 982,57 €', annual: '27,57 €', monthly: '2,30 €', source: 'Vykdymo ataskaita', url: 'https://example.org/lrt' }],
+      rows: [
+        { name: 'LRT išlaikymas', used: '79 641 982,57 €', annual: '27,57 €', source: 'Vykdymo ataskaita', url: 'https://example.org/lrt' },
+        { name: 'Bendrasis pagalbos centras (112)', used: '14 887 844,47 €', annual: '5,15 €', source: 'Vykdymo ataskaita', url: 'https://example.org/112' },
+      ],
     },
   });
   const dialog = document.body.find((element) => element.tag === 'dialog');
@@ -332,14 +335,17 @@ test('reports explain the latest comparable spending year and place 2025 institu
     assert.ok(markup.includes('href="https://example.org/vda"') && markup.includes('href="https://example.org/eurostat"'));
     assert.match(markup, /Naujausi palyginami duomenys už 2024 m\..*href="https:\/\/example.org\/2025"/u);
     assert.match(markup, /Gynybai numatyta 5,38 % BVP/u);
-    assert.ok(markup.indexOf('Išlaidų papunkčiai') < markup.indexOf('<h3>LRT</h3>'));
-    assert.match(markup, /<strong>27,57 €<\/strong> per metus · 2,30 € per mėnesį/u);
+    assert.ok(markup.indexOf('Išlaidų papunkčiai') < markup.indexOf('<h3>LRT išlaikymas</h3>'));
+    assert.ok(markup.indexOf('<h3>LRT išlaikymas</h3>') < markup.indexOf('<h3>Bendrasis pagalbos centras (112)</h3>'));
+    assert.match(markup, /<strong>27,57 €<\/strong> per metus vienam gyventojui/u);
+    assert.doesNotMatch(markup, /2,30 € per mėnesį|0,43 € per mėnesį/u);
     assert.match(markup, /Panaudota 79 641 982,57 €.*href="https:\/\/example.org\/lrt"/u);
   }
   const text = dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value;
   assert.match(text, /Preliminarus skaičiavimas pagal įvestus duomenis/u);
   assert.match(text, /2026 m. gruodžio 18 d\..*2027 m. vasarį/u);
-  assert.ok(text.indexOf('Išlaidų papunkčiai') < text.indexOf('LRT · 27,57 € per metus'));
+  assert.ok(text.indexOf('Išlaidų papunkčiai') < text.indexOf('LRT išlaikymas · 27,57 € per metus'));
+  assert.doesNotMatch(text, /2,30 € per mėnesį|0,43 € per mėnesį/u);
 });
 
 test('full reports keep tax totals and omit the PSD purpose section', async () => {

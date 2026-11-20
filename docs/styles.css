@@ -301,11 +301,13 @@ input:focus-visible, select:focus-visible { z-index: 1; }
 .custom-fields output { min-height: 46px; display: grid; align-items: center; padding: 6px 10px; border-radius: 8px; color: #0b5b50; background: #e3efe7; font-weight: 750; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .comparison-source-note { color: #4d655c; font-size: .73rem; margin-top: 12px; }
 .institution-budget-grid { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; margin: 16px 0 0; padding: 0; }
-.institution-budget { min-width: 0; display: grid; grid-template-rows: 1fr auto auto auto auto; gap: 4px; padding: 14px; border: 1px solid #dae6de; border-radius: 10px; background: #fff; }
+.institution-budget { min-width: 0; display: grid; grid-template-rows: 1fr auto auto auto; gap: 5px; padding: 14px; border: 1px solid #dae6de; border-radius: 10px; background: #fff; }
+.institution-budget:first-child { grid-column: 1 / -1; border-color: #bfdccf; background: #eaf4ee; }
 .institution-budget h3 { color: #1a3636; font-size: 1rem; line-height: 1.3; }
 .institution-budget-annual { color: #0a6557; font-variant-numeric: tabular-nums; }
 .institution-budget-annual strong { font-size: 1.45rem; font-weight: 760; }
-.institution-budget-monthly, .institution-budget-total, .institution-budget a { font-size: .8rem; }
+.institution-budget:first-child .institution-budget-annual strong { font-size: clamp(1.75rem, 3vw, 2.3rem); }
+.institution-budget-total, .institution-budget a { font-size: .8rem; }
 .institution-budget-total { color: #455d56; }
 @media (max-width: 860px) {
   .comparison { padding: 19px; }

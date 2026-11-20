@@ -4,7 +4,7 @@
   const brand = "Mano mokesčių euras";
   const preliminaryNotice = "Preliminarus skaičiavimas pagal įvestus duomenis.";
   const annualTaxHeading = "Tavo sumokėti mokesčiai ir draudimo įmokos per metus";
-  const institutionHeading = "Kiek įstaigoms tenka vienam gyventojui?";
+  const institutionHeading = "Kiek įstaigų išlaikymas kainuoja vienam gyventojui?";
   const htmlEntities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
   const photoSheets = [
     "./media/palyginimai-maistas.webp",
@@ -186,7 +186,7 @@
       <ul class="tax-report-institutions" role="list">
         ${institutions.rows.map((item) => `<li>
           <h3>${escapeHtml(item.name)}</h3>
-          <p><strong>${escapeHtml(item.annual)}</strong> per metus · ${escapeHtml(item.monthly)} per mėnesį</p>
+          <p class="tax-report-institution-annual"><strong>${escapeHtml(item.annual)}</strong> per metus vienam gyventojui</p>
           <p>Panaudota ${escapeHtml(item.used)}. ${sourceLink(item)}</p>
         </li>`).join("")}
       </ul>
@@ -331,10 +331,12 @@
     .tax-report-spending-group summary strong { margin-left: 7px; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .tax-report-spending-group table { margin-top: 1px; margin-bottom: 6px; }
     .tax-report-row-description { display: block; margin-top: 2px; color: #435467; font-size: .78rem; font-weight: 400; }
-    .tax-report-document .tax-report-institutions { list-style: none; padding: 0; font-size: .85rem; }
-    .tax-report-institutions li { padding-block: 7px; border-bottom: 1px solid #dce3e1; break-inside: avoid; }
+    .tax-report-document .tax-report-institutions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 182px), 1fr)); gap: 8px; list-style: none; padding: 0; margin-top: 10px; font-size: .85rem; }
+    .tax-report-institutions li { display: grid; align-content: start; gap: 4px; margin: 0; padding: 10px 12px; border: 1px solid #dce3e1; border-radius: 8px; break-inside: avoid; }
+    .tax-report-institutions li:first-child { grid-column: 1 / -1; border-color: #c1ddcf; background: #eaf4ee; }
     .tax-report-institutions h3 { margin: 0 0 3px; font-size: .94rem; }
-    .tax-report-institutions strong { color: #0b5b50; }
+    .tax-report-institution-annual strong { color: #0b5b50; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+    .tax-report-institutions li:first-child .tax-report-institution-annual strong { font-size: 1.8rem; }
     .tax-report-institutions a { overflow-wrap: anywhere; }
     @media screen and (max-width: 560px) {
       .tax-report-document .tax-report-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -348,6 +350,8 @@
       .tax-report-spending-group { background: #fff; padding-inline: 0; border: 0; border-top: 1px solid #d5e2d9; border-radius: 0; }
       .tax-report-spending-group summary { display: block; break-after: avoid; }
       .tax-report-spending-help { display: none; }
+      .tax-report-document .tax-report-institutions { display: block; }
+      .tax-report-institutions li + li { margin-top: 6px; }
     }
   `;
 
@@ -450,7 +454,7 @@
       data.institutions?.rows.length ? paragraph(institutionHeading, [
         institutionBasis(data.institutions),
         ...data.institutions.rows.map((item) => [
-          `${item.name} · ${item.annual} per metus · ${item.monthly} per mėnesį`,
+          `${item.name} · ${item.annual} per metus vienam gyventojui`,
           `Panaudota ${item.used}.`,
           ...sourceLines(item),
         ].join("\n")),

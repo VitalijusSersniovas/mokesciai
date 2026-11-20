@@ -37,14 +37,14 @@ const institutionBudgetYear = 2025;
 const institutionBudgetPopulation = 2_889_128;
 const institutionBudgetUsed = [
   {
+    name: "LRT išlaikymas", used: 7_964_198_257,
+    source: "LRT biudžeto vykdymo ataskaita",
+    url: "https://apie.lrt.lt/api/uploads/BVA_su_audito_isvada_2025_500f22d407.pdf#page=4",
+  },
+  {
     name: "Bendrasis pagalbos centras (112)", used: 1_488_784_447,
     source: "PAGD biudžeto vykdymo ataskaita",
     url: "https://pagd.lrv.lt/public/canonical/1773840046/8172/PAGD%20MBVAR%2020251231.pdf#page=41",
-  },
-  {
-    name: "LRT", used: 7_964_198_257,
-    source: "LRT biudžeto vykdymo ataskaita",
-    url: "https://apie.lrt.lt/api/uploads/BVA_su_audito_isvada_2025_500f22d407.pdf#page=4",
   },
   {
     name: "Seimo kanceliarija", used: 5_429_300_000,
@@ -65,7 +65,6 @@ function institutionBudgetRows() {
       ...item,
       used: compactMoney(item.used),
       annual: money(Math.round(annualCents)),
-      monthly: money(Math.round(annualCents / 12)),
     };
   });
 }
