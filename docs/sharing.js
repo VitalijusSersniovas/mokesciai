@@ -2,11 +2,34 @@
 
 const publicCalculatorUrl = document.querySelector('link[rel="canonical"]').href;
 
+const calculatorSocialPlatforms = [
+  { name: "Facebook", endpoint: "https://www.facebook.com/sharer/sharer.php", parameter: "u" },
+  { name: "WhatsApp", endpoint: "https://wa.me/", parameter: "text" },
+  { name: "Telegram", endpoint: "https://t.me/share/url", parameter: "url" },
+  { name: "X", endpoint: "https://twitter.com/intent/tweet", parameter: "url" },
+];
+
+function makeCalculatorSocialLink(url, { name, endpoint, parameter }) {
+  const href = new URL(endpoint);
+  href.searchParams.set(parameter, url);
+  const link = document.createElement("a");
+  link.className = "secondary-button";
+  link.href = href.href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = `Dalytis „${name}“`;
+  return link;
+}
+
 function installPublicLinkSharing() {
+  const facebook = document.getElementById("facebook-share");
   const button = document.getElementById("copy-site-link");
   const field = document.getElementById("site-link-field");
   const input = document.getElementById("site-link-value");
   const status = document.getElementById("site-share-status");
+
+  const otherPlatforms = calculatorSocialPlatforms.filter((platform) => platform.name !== "Facebook");
+  facebook.after(...otherPlatforms.map((platform) => makeCalculatorSocialLink(publicCalculatorUrl, platform)));
 
   button.addEventListener("click", async () => {
     try {

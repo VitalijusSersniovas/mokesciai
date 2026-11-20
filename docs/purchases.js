@@ -244,6 +244,7 @@ const purchaseMonthsPerYear = 12;
     const frame = create("div", { className: "money-field" });
     frame.append(input);
     if (currency) {
+      input.setAttribute("data-purchase-currency", "");
       const symbol = create("span", { textContent: "€" });
       symbol.setAttribute("aria-hidden", "true");
       frame.append(symbol);

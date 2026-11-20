@@ -9,6 +9,58 @@ const spendingSource = {
   source: "Eurostatas · 2024 m. Lietuvos valdžios sektoriaus išlaidos (COFOG)",
   url: "https://ec.europa.eu/eurostat/databrowser/view/gov_10a_exp/default/table?lang=en",
 };
+const spendingCoverage = {
+  text: "Paskutinė visų sričių išklotinė yra už 2024 m. Iš 2025 m. paskelbtų duomenų matyti, kad gynybai teko 2,28 mlrd. € (6,55 % visų valdžios sektoriaus išlaidų). Visų sričių ir papunkčių 2025 m. išklotinė dar nepaskelbta.",
+  source: "Valstybės duomenų agentūra · 2025 m. valdžios sektoriaus išlaidos",
+  url: "https://osp-rs.stat.gov.lt/rest_json/data/S7R229_M2040214/?startPeriod=2024&endPeriod=2026",
+};
+const defenceBudgetContext = {
+  text: "2026 m. patvirtintame biudžete gynybai numatyta 5,38 % BVP, o NATO 2026 m. įvertis yra 5,33 % BVP. Išlaidų papunkčių dalys skaičiuojamos nuo visų valdžios sektoriaus išlaidų.",
+  source: "NATO · 2026 m. įverčiai (3 lentelė)",
+  url: "https://www.nato.int/content/dam/nato/webready/documents/finance/def-exp-2026-en.pdf#page=8",
+};
+const defenceBudgetSource = {
+  source: "Finansų ministerija · Patvirtintas 2026 m. biudžetas",
+  url: "https://finmin.lrv.lt/lt/naujienos/seimas-patvirtino-2026-2028-m-valstybes-biudzeto-projekta-qpNg/",
+};
+
+const institutionBudgetYear = 2025;
+const institutionBudgetPopulation = 2_889_128;
+const institutionBudgetUsed = [
+  {
+    name: "Bendrasis pagalbos centras (112)", used: 1_488_784_447,
+    source: "PAGD biudžeto vykdymo ataskaita",
+    url: "https://pagd.lrv.lt/public/canonical/1773840046/8172/PAGD%20MBVAR%2020251231.pdf#page=41",
+  },
+  {
+    name: "LRT", used: 7_964_198_257,
+    source: "LRT biudžeto vykdymo ataskaita",
+    url: "https://apie.lrt.lt/api/uploads/BVA_su_audito_isvada_2025_500f22d407.pdf#page=4",
+  },
+  {
+    name: "Seimo kanceliarija", used: 5_429_300_000,
+    source: "Valstybės biudžeto vykdymas · 8 priedas",
+    url: "https://finmin.lrv.lt/public/canonical/1773984051/26904/Priedas_Nr._8_VBV_2025%20m.pdf",
+  },
+  {
+    name: "Lietuvos nacionalinis muziejus", used: 1_698_340_000,
+    source: "Valstybės biudžeto vykdymas · 8 priedas",
+    url: "https://finmin.lrv.lt/public/canonical/1773984051/26904/Priedas_Nr._8_VBV_2025%20m.pdf",
+  },
+];
+
+function institutionBudgetRows() {
+  return institutionBudgetUsed.map((item) => {
+    const annualCents = item.used / institutionBudgetPopulation;
+    return {
+      ...item,
+      used: compactMoney(item.used),
+      annual: money(Math.round(annualCents)),
+      monthly: money(Math.round(annualCents / 12)),
+    };
+  });
+}
+
 const expenditures = [
   { code: "GF10", name: "Socialinė apsauga", amount: 115958, color: "#0d6659" },
   { code: "GF07", name: "Sveikata", amount: 45489, color: "#32937d" },

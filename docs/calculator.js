@@ -11,6 +11,7 @@ const wageMonthsFormat = new Intl.NumberFormat("lt-LT", { maximumFractionDigits:
 const spendingList = element("spending-list");
 const donut = element("donut");
 const reportHelp = element("report-help");
+const reportError = element("report-error");
 const staleResult = element("stale-result");
 const priceComparison = installPriceComparison(element("palyginimas"));
 const taxYearSelect = element("tax-year");
@@ -39,21 +40,70 @@ let wageEntryBasis = wageBasis.value;
 const wageInputs = { gross: "", net: "" };
 wageInputs[wageEntryBasis] = wageInput.value;
 
-class InvalidField extends Error {}
+class InvalidField extends Error {
+  constructor(field, message) {
+    super(message);
+    this.field = field;
+  }
+}
+
+const fieldErrors = new Map();
+let reportErrorField;
 
 function showError(field, message) {
+  throw new InvalidField(field, message);
+}
+
+function expandFieldDetails(field) {
   for (let details = field.closest("details"); details; details = details.parentElement.closest("details")) {
     details.open = true;
   }
-  if (!field.hasAttribute("data-original-description")) {
-    field.dataset.originalDescription = field.getAttribute("aria-describedby") ?? "";
-  }
-  field.setAttribute("aria-describedby", (field.dataset.originalDescription + " form-error").trim());
-  field.setAttribute("aria-invalid", "true");
-  errorMessage.textContent = message;
-  errorMessage.hidden = false;
+}
+
+function revealField(field) {
+  expandFieldDetails(field);
   field.focus();
-  throw new InvalidField(message);
+}
+
+function markFieldError(field, message) {
+  let inlineError = fieldErrors.get(field);
+  if (!inlineError) {
+    inlineError = document.createElement("p");
+    inlineError.className = "field-error";
+    inlineError.id = field.id + "-error";
+    (field.closest(".field") ?? field.parentElement).append(inlineError);
+    const describedBy = field.getAttribute("aria-describedby") ?? "";
+    field.setAttribute("aria-describedby", (describedBy + " " + inlineError.id).trim());
+    field.setAttribute("aria-invalid", "true");
+    fieldErrors.set(field, inlineError);
+  }
+  inlineError.textContent = message;
+}
+
+function clearFieldError(field) {
+  const inlineError = fieldErrors.get(field);
+  if (!inlineError) return;
+  inlineError.remove();
+  const descriptions = (field.getAttribute("aria-describedby") ?? "").split(/\s+/)
+    .filter((id) => id && id !== inlineError.id);
+  if (descriptions.length) field.setAttribute("aria-describedby", descriptions.join(" "));
+  else field.removeAttribute("aria-describedby");
+  field.removeAttribute("aria-invalid");
+  fieldErrors.delete(field);
+}
+
+function validatePurchaseInput({ target }) {
+  if (!target.matches("#pirkiniai input[inputmode=decimal]") || !target.value.trim() || fieldErrors.has(target)) return;
+  const shopExpenses = target.id.startsWith("vat-");
+  try {
+    readField(target, {
+      min: shopExpenses ? 0 : 0.01,
+      decimals: shopExpenses || target.hasAttribute("data-purchase-currency") ? 2 : undefined,
+    });
+  } catch (error) {
+    if (!(error instanceof InvalidField)) throw error;
+    markFieldError(target, error.message);
+  }
 }
 
 function readField(field, { required = false, integer = false, min = 0, max = 100_000_000, decimals } = {}) {
@@ -108,18 +158,33 @@ function changeWageBasis() {
     : "Įvesk vidutinį mėnesio atlyginimą su premijomis.";
 }
 
-function clearError() {
+function clearReportError() {
+  reportErrorField = undefined;
+  if (!reportError) return;
+  reportError.hidden = true;
+  reportError.replaceChildren();
+}
+
+function clearErrors() {
+  for (const field of fieldErrors.keys()) clearFieldError(field);
   errorMessage.hidden = true;
   errorMessage.textContent = "";
-  form.querySelectorAll("[aria-invalid]").forEach((field) => {
-    field.removeAttribute("aria-invalid");
-    if (field.dataset.originalDescription) {
-      field.setAttribute("aria-describedby", field.dataset.originalDescription);
-    } else {
-      field.removeAttribute("aria-describedby");
-    }
-    delete field.dataset.originalDescription;
+  clearReportError();
+}
+
+function showBlockedAction(field, message, action) {
+  const link = document.createElement("a");
+  link.href = "#" + field.id;
+  link.textContent = "Pereiti prie pažymėto lauko";
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    revealField(field);
   });
+  reportErrorField = field;
+  reportError.replaceChildren(action + " Rasta įvesties klaida. " + message + " ", link);
+  reportError.hidden = false;
+  reportError.tabIndex = -1;
+  reportError.focus();
 }
 
 function renderSpendingStatus() {
@@ -135,9 +200,17 @@ function markResultStale() {
   reportHelp.textContent = "Atidarant ataskaitą arba suvestinę, suma bus perskaičiuota pagal naujausius duomenis.";
 }
 
-function markUncalculated(event) {
-  if (event.target === taxYearSelect) return;
-  clearError();
+function markUncalculated({ target }) {
+  if (target === taxYearSelect) return;
+  const changedPurchase = target.matches(".purchase-row select[id$='-product'], .purchase-row select[id$='-basis']")
+    ? target.closest(".purchase-row") : null;
+  for (const field of fieldErrors.keys()) {
+    if (field !== target && !field.closest("[hidden]") && form.contains(field) && !changedPurchase?.contains(field)) continue;
+    clearFieldError(field);
+    if (reportErrorField === field) clearReportError();
+  }
+  errorMessage.hidden = true;
+  errorMessage.textContent = "";
   markResultStale();
 }
 
@@ -654,6 +727,49 @@ function renderResult(announce = false) {
   }
 }
 
+function renderPublicSpendingContext() {
+  const notes = [
+    ["spending-coverage", spendingCoverage],
+    ["spending-defence-context", defenceBudgetContext, defenceBudgetSource],
+  ];
+  for (const [id, note, ...otherSources] of notes) {
+    const paragraph = element(id);
+    if (!paragraph) continue;
+    paragraph.textContent = note.text;
+    for (const source of [note, ...otherSources]) {
+      const link = document.createElement("a");
+      link.href = source.url;
+      link.textContent = source.source;
+      paragraph.append(" ", link);
+    }
+  }
+
+  const list = element("institution-budgets");
+  if (!list) return;
+  for (const item of institutionBudgetRows()) {
+    const row = document.createElement("li");
+    row.className = "institution-budget";
+    const heading = document.createElement("h3");
+    heading.textContent = item.name;
+    const annual = document.createElement("p");
+    annual.className = "institution-budget-annual";
+    const value = document.createElement("strong");
+    value.textContent = item.annual;
+    annual.append(value, " per metus");
+    const monthly = document.createElement("p");
+    monthly.className = "institution-budget-monthly";
+    monthly.textContent = item.monthly + " per mėnesį";
+    const used = document.createElement("p");
+    used.className = "institution-budget-total";
+    used.textContent = "Panaudota " + item.used;
+    const source = document.createElement("a");
+    source.href = item.url;
+    source.textContent = item.source;
+    row.append(heading, annual, monthly, used, source);
+    list.append(row);
+  }
+}
+
 function reportData(includePurchases) {
   const { lines, total } = annualTotals();
   const spending = includePurchases ? buildSpendingBreakdown(total) : [];
@@ -679,6 +795,14 @@ function reportData(includePurchases) {
       rows: area.groups.map((group) => [group.name + " · " + group.code, groupDisplayAmount(group), group.description]),
     })),
     spendingSource,
+    spendingCoverage,
+    defenceBudgetContext,
+    defenceBudgetSource,
+    institutions: includePurchases ? {
+      year: institutionBudgetYear,
+      population: institutionBudgetPopulation.toLocaleString("lt-LT"),
+      rows: institutionBudgetRows(),
+    } : null,
     notes,
     caveats: purchaseCaveats(),
     url: publicCalculatorUrl,
@@ -690,6 +814,7 @@ wageBasis.addEventListener("change", changeWageBasis);
 element("self-expense-mode").addEventListener("change", renderIncomeMode);
 form.addEventListener("input", markUncalculated);
 form.addEventListener("change", markUncalculated);
+form.addEventListener("focusout", validatePurchaseInput);
 
 element("insurance-basis").addEventListener("click", () => {
   showFundShares = !showFundShares;
@@ -697,8 +822,8 @@ element("insurance-basis").addEventListener("click", () => {
   renderSpendingStatus();
 });
 
-function calculateResult({ scroll = false, example = false } = {}) {
-  clearError();
+function calculateResult({ scroll = false, example = false, blockedAction = "" } = {}) {
+  clearErrors();
   try {
     const year = selectedTaxYear();
     const income = readIncome(year);
@@ -727,6 +852,15 @@ function calculateResult({ scroll = false, example = false } = {}) {
   } catch (error) {
     if (!(error instanceof InvalidField)) throw error;
     markResultStale();
+    markFieldError(error.field, error.message);
+    errorMessage.textContent = error.message;
+    errorMessage.hidden = false;
+    if (blockedAction && reportError) {
+      expandFieldDetails(error.field);
+      showBlockedAction(error.field, error.message, blockedAction);
+    } else {
+      revealField(error.field);
+    }
     return false;
   }
 }
@@ -744,11 +878,11 @@ form.addEventListener("submit", (event) => {
 });
 
 element("view-report").addEventListener("click", () => {
-  if (staleResult.hidden || calculateResult()) window.taxReport.open(reportData(true));
+  if (staleResult.hidden || calculateResult({ blockedAction: "Ataskaita neatidaryta." })) window.taxReport.open(reportData(true));
 });
 
 element("share-result").addEventListener("click", () => {
-  if (staleResult.hidden || calculateResult()) window.taxReport.openShare(reportData(false));
+  if (staleResult.hidden || calculateResult({ blockedAction: "Suvestinė neatidaryta." })) window.taxReport.openShare(reportData(false));
 });
 
 const resultCardSharing = installResultCardSharing(() => {
@@ -766,6 +900,7 @@ const resultCardSharing = installResultCardSharing(() => {
 installPublicLinkSharing();
 updateYearFields();
 renderIncomeMode();
+renderPublicSpendingContext();
 renderResult();
 selectSpendingTabFromLink();
 window.addEventListener("hashchange", selectSpendingTabFromLink);

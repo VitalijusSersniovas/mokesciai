@@ -5,6 +5,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'docs', 'report.js'), 'utf8');
+const sharingSource = fs.readFileSync(path.join(__dirname, '..', 'docs', 'sharing.js'), 'utf8');
 
 class Element {
   constructor(tag, document) {
@@ -84,6 +85,7 @@ function setup(navigator = {}) {
       return element;
     },
     getElementById(id) { return document.head.find((element) => element.id === id); },
+    querySelector() { return { href: 'https://example.org/' }; },
     execCommand() { return false; },
   };
   document.head = document.createElement('head');
@@ -108,7 +110,7 @@ function setup(navigator = {}) {
       return 'blob:test/report';
     }
   }
-  vm.runInNewContext(source, { document, window, navigator, URL: FileUrl, Blob, Event });
+  vm.runInNewContext(sharingSource + '\n' + source, { document, window, navigator, URL: FileUrl, Blob, Event });
   return { document, report: window.taxReport, files, images, printCalls: () => printCalls };
 }
 
@@ -172,7 +174,13 @@ test('report dialog gives a direct HTML download and a separate print document',
     './media/palyginimai-paslaugos.webp 0,512',
   ]);
   assert.doesNotMatch(html, /src="\.\/media\//u);
-  assert.ok(html.indexOf('Ką už šią sumą galima įsigyti?') < html.indexOf('Metiniai mokesčiai ir draudimo įmokos'));
+  assert.ok(html.indexOf('Ką už šią sumą galima įsigyti?') < html.indexOf('Tavo sumokėti mokesčiai ir draudimo įmokos per metus'));
+  const footer = dialog.find((element) => element.className === 'tax-export-footer');
+  assert.ok(dialog.children.indexOf(preview) < dialog.children.indexOf(footer));
+  assert.equal(footer.find((element) => element.textContent === 'Atsisiųsti HTML'), download);
+  assert.ok(footer.find((element) => element.textContent === 'Pasidalyti su draugu'));
+  assert.ok(footer.find((element) => element.textContent === 'Ataskaitos tekstas kopijavimui'));
+  assert.ok(html.indexOf('Tavo sumokėti mokesčiai ir draudimo įmokos per metus') < html.indexOf('class="print-actions"'));
 
   await dialog.find((element) => element.textContent === 'Spausdinti arba išsaugoti PDF').click();
   assert.equal(printCalls(), 1);
@@ -299,6 +307,33 @@ test('spending groups use projected amounts and expand for print and for downloa
   assert.equal(openGroup.open, true);
 });
 
+test('reports explain the latest comparable spending year and place 2025 institutions after spending details', async () => {
+  const { document, report, files } = setup();
+  report.open({
+    ...data, comparison: null,
+    spendingCoverage: { text: 'Naujausi palyginami duomenys už 2024 m.', source: 'Valstybės biudžetas', url: 'https://example.org/2025' },
+    defenceBudgetContext: { text: 'Gynybai numatyta 5,38 % BVP.', source: 'Gynybos planas', url: 'https://example.org/2026' },
+    institutions: {
+      year: 2025, population: '2 889 128',
+      rows: [{ name: 'LRT', used: '79 641 982,57 €', annual: '27,57 €', monthly: '2,30 €', source: 'Vykdymo ataskaita', url: 'https://example.org/lrt' }],
+    },
+  });
+  const dialog = document.body.find((element) => element.tag === 'dialog');
+  const preview = dialog.find((element) => element.tag === 'article');
+  const printCopy = document.body.find((element) => element.classes.has('tax-report-print-copy'));
+  for (const markup of [preview.innerHTML, printCopy.innerHTML, await files[0].text()]) {
+    assert.match(markup, /tax-report-preliminary.*Preliminarus skaičiavimas pagal įvestus duomenis/u);
+    assert.match(markup, /Naujausi palyginami duomenys už 2024 m\..*href="https:\/\/example.org\/2025"/u);
+    assert.match(markup, /Gynybai numatyta 5,38 % BVP/u);
+    assert.ok(markup.indexOf('Išlaidų papunkčiai') < markup.indexOf('<h3>LRT</h3>'));
+    assert.match(markup, /<strong>27,57 €<\/strong> per metus · 2,30 € per mėnesį/u);
+    assert.match(markup, /Panaudota 79 641 982,57 €.*href="https:\/\/example.org\/lrt"/u);
+  }
+  const text = dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value;
+  assert.match(text, /Preliminarus skaičiavimas pagal įvestus duomenis/u);
+  assert.ok(text.indexOf('Išlaidų papunkčiai') < text.indexOf('LRT · 27,57 € per metus'));
+});
+
 test('full reports keep tax totals and omit the PSD purpose section', async () => {
   const { document, report, files } = setup();
   report.open({ ...data, comparison: null });
@@ -328,7 +363,8 @@ test('summary stays manually selectable if clipboard and device sharing fail', a
   assert.match(field.value, /Pavyzdys pagal numatytąjį atlyginimą/u);
   assert.match(field.value, /Bendra metinė mokesčių ir įmokų suma prilygsta 5,8 mėn. atlyginimo ant popieriaus/u);
   assert.match(field.value, /GPM · 67,50 €\nVSD · 32,40 €\nPSD · 0,10 €/u);
-  assert.match(field.value, /https:\/\/example.org\//u);
+  assert.match(field.value, /Preliminarus skaičiavimas pagal įvestus duomenis\./u);
+  assert.doesNotMatch(field.value, /https?:\/\//u);
   assert.doesNotMatch(field.value, /Privati informacija|pirkinių informacija|secret|Pienas|Aukštasis mokslas|Pensijos|PSDF ataskaita|išklotinė|biudžetams|VSD ir PSD dalis bendroje sumoje/u);
 
   await dialog.find((element) => element.textContent === 'Dalytis per įrenginį').click();
@@ -341,20 +377,35 @@ test('summary stays manually selectable if clipboard and device sharing fail', a
 
 test('the report shares a clean calculator link separately from the tax summary', async () => {
   const copied = [];
-  const { document, report } = setup({ clipboard: { async writeText(text) { copied.push(text); } } });
+  const shared = [];
+  const { document, report } = setup({
+    clipboard: { async writeText(text) { copied.push(text); } },
+    async share(payload) { shared.push(payload); },
+  });
   const url = 'https://example.org/mokesciai/';
   document.querySelector = () => ({ href: url });
-  report.open({ ...data, url, comparison: null });
+  report.open({ ...data, url: url + '?value=secret#private', comparison: null });
   const dialog = document.body.find((element) => element.tag === 'dialog');
   const section = dialog.find((element) => element.className === 'tax-export-share');
   assert.equal(section.find((element) => element.tag === 'h3').textContent, 'Pasidalyti su draugu');
-  const facebook = section.find((element) => element.tag === 'a');
-  assert.equal(new URL(facebook.href).searchParams.get('u'), url);
+  for (const [name, host, key] of [
+    ['Facebook', 'www.facebook.com', 'u'], ['WhatsApp', 'wa.me', 'text'],
+    ['Telegram', 't.me', 'url'], ['X', 'twitter.com', 'url'],
+  ]) {
+    const link = section.find((element) => element.textContent === `Dalytis „${name}“`);
+    const href = new URL(link.href);
+    assert.equal(href.hostname, host);
+    assert.equal(href.searchParams.get(key), url);
+    assert.equal(link.rel, 'noopener noreferrer');
+  }
   await section.find((element) => element.textContent === 'Kopijuoti skaičiuoklės nuorodą').click();
   await section.find((element) => element.textContent === 'Kopijuoti mokesčių suvestinę').click();
+  await section.find((element) => element.textContent === 'Dalytis suvestine per įrenginį').click();
   assert.equal(copied[0], url);
   assert.match(copied[1], /GPM · 67,50 €/u);
-  assert.doesNotMatch(copied[1], /Privati informacija|secret|Pienas|Aukštasis mokslas/u);
+  assert.doesNotMatch(copied[1], /https?:\/\/|Privati informacija|secret|Pienas|Aukštasis mokslas/u);
+  assert.equal(shared[0].text, copied[1]);
+  assert.equal(shared[0].url, undefined);
 });
 
 test('calculation caveat accompanies the result in the preview, PDF, HTML and sharing text', async () => {
@@ -368,7 +419,7 @@ test('calculation caveat accompanies the result in the preview, PDF, HTML and sh
   for (const markup of [preview.innerHTML, printCopy.innerHTML, await files[0].text()]) {
     assert.match(markup, /<p class="tax-report-caveat"><strong>Skaičiavimo pastaba\.<\/strong> Daliai pirkinių PVM neapskaičiuotas\. Cigarečių akcizas rodomas kaip apatinė riba\. &lt;Pastaba&gt;<\/p>/u);
     assert.doesNotMatch(markup, /<Pastaba>/u);
-    assert.ok(markup.indexOf('apatinė riba') < markup.indexOf('Metiniai mokesčiai ir draudimo įmokos'));
+    assert.ok(markup.indexOf('apatinė riba') < markup.indexOf('Tavo sumokėti mokesčiai ir draudimo įmokos per metus'));
   }
   const fullText = dialog.find((element) => element.attributes.get('aria-label') === 'Ataskaitos tekstas').value;
   assert.ok(fullText.includes('Skaičiavimo pastaba. ' + caveat));

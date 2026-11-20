@@ -2,6 +2,9 @@
   "use strict";
 
   const brand = "Mano mokesčių euras";
+  const preliminaryNotice = "Preliminarus skaičiavimas pagal įvestus duomenis.";
+  const annualTaxHeading = "Tavo sumokėti mokesčiai ir draudimo įmokos per metus";
+  const institutionHeading = "Kiek įstaigoms tenka vienam gyventojui?";
   const htmlEntities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
   const photoSheets = [
     "./media/palyginimai-maistas.webp",
@@ -150,6 +153,9 @@
     return `<section class="tax-report-spending-details" aria-labelledby="tax-report-spending-heading">
       <h2 id="tax-report-spending-heading">Išlaidų papunkčiai</h2>
       <p>${escapeHtml(spendingBasis(data.spendingYear))}</p>
+      ${data.spendingCoverage ? `<p>${escapeHtml(data.spendingCoverage.text)} ${sourceLink(data.spendingCoverage)}</p>` : ""}
+      ${data.defenceBudgetContext ? `<p>${escapeHtml(data.defenceBudgetContext.text)} ${sourceLink(data.defenceBudgetContext)}
+        ${data.defenceBudgetSource ? sourceLink(data.defenceBudgetSource) : ""}</p>` : ""}
       <p class="tax-report-spending-help">Išskleisk sritį, kad matytum jos papunkčius.</p>
       ${available.map((group) => `<details class="tax-report-spending-group"${expanded ? " open" : ""}>
         <summary><span>${escapeHtml(group.name)}</span><strong>${escapeHtml(group.amount)}</strong></summary>
@@ -164,6 +170,25 @@
 
   function spendingBasis(year) {
     return `Įvertis apskaičiuotas pagal ${year} m. faktines Lietuvos valdžios sektoriaus išlaidų proporcijas.`;
+  }
+
+  function institutionBasis(data) {
+    return `${data.year} m. panaudoti asignavimai padalyti iš vidutinio tų metų Lietuvos gyventojų skaičiaus (${data.population}). Rodomi šalies vidurkiai.`;
+  }
+
+  function reportInstitutionBudgets(institutions) {
+    if (!institutions?.rows.length) return "";
+    return `<section aria-labelledby="tax-report-institutions-heading">
+      <h2 id="tax-report-institutions-heading">${institutionHeading}</h2>
+      <p>${escapeHtml(institutionBasis(institutions))}</p>
+      <ul class="tax-report-institutions" role="list">
+        ${institutions.rows.map((item) => `<li>
+          <h3>${escapeHtml(item.name)}</h3>
+          <p><strong>${escapeHtml(item.annual)}</strong> per metus · ${escapeHtml(item.monthly)} per mėnesį</p>
+          <p>Panaudota ${escapeHtml(item.used)}. ${sourceLink(item)}</p>
+        </li>`).join("")}
+      </ul>
+    </section>`;
   }
 
   function reportPurchaseDetails(purchases) {
@@ -211,13 +236,14 @@
       <header>
         <div class="tax-report-brand">${brand}</div>
         <h1>${escapeHtml(data.year)} m. mokesčių ataskaita</h1>
+        <p class="tax-report-preliminary"><strong>${preliminaryNotice}</strong></p>
         <p>${escapeHtml(data.mode)}</p>
         ${data.yearContext ? `<p class="tax-report-year-context">${escapeHtml(data.yearContext)}</p>` : ""}
         ${caveat ? `<p class="tax-report-caveat"><strong>Skaičiavimo pastaba.</strong> ${escapeHtml(caveat)}</p>` : ""}
       </header>
       ${comparisonSection}
-      <section aria-label="Mokesčiai ir draudimo įmokos">
-        <h2>Metiniai mokesčiai ir draudimo įmokos</h2>
+      <section aria-labelledby="tax-report-annual-tax-heading">
+        <h2 id="tax-report-annual-tax-heading">${annualTaxHeading}</h2>
         <div class="tax-report-amount"><span>Bendra suma</span><strong>${escapeHtml(data.total)}</strong></div>
         <table>
           <thead><tr><th scope="col">Mokestis arba įmoka</th><th scope="col">Suma</th></tr></thead>
@@ -226,6 +252,7 @@
       </section>
       ${reportPurchaseDetails(data.purchases)}
       ${reportSpendingDetails(data, expandedSpending)}
+      ${reportInstitutionBudgets(data.institutions)}
       ${notesSection}`;
   }
 
@@ -239,6 +266,7 @@
     .tax-report-document p { color: #435467; }
     .tax-report-document h1 + p, .tax-report-document h2 + p { margin-top: 6px; }
     .tax-report-document .tax-report-year-context { margin-top: 5px; }
+    .tax-report-document .tax-report-preliminary { margin-block: 9px 7px; padding: 7px 10px; border-radius: 6px; background: #e9f4ef; color: #123f38; }
     .tax-report-document .tax-report-caveat { margin-top: 12px; padding: 10px 12px; border-left: 3px solid #9b592f; background: #fff0db; color: #633b24; overflow-wrap: anywhere; }
     .tax-report-amount { margin-top: 16px; padding: 12px 15px; border: 1px solid #cadfd6; border-radius: 10px; background: #e9f4ef; color: #123f38; }
     .tax-report-amount span { display: block; font-size: .8rem; font-weight: 700; }
@@ -301,6 +329,11 @@
     .tax-report-spending-group summary strong { margin-left: 7px; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .tax-report-spending-group table { margin-top: 1px; margin-bottom: 6px; }
     .tax-report-row-description { display: block; margin-top: 2px; color: #435467; font-size: .78rem; font-weight: 400; }
+    .tax-report-document .tax-report-institutions { list-style: none; padding: 0; font-size: .85rem; }
+    .tax-report-institutions li { padding-block: 7px; border-bottom: 1px solid #dce3e1; break-inside: avoid; }
+    .tax-report-institutions h3 { margin: 0 0 3px; font-size: .94rem; }
+    .tax-report-institutions strong { color: #0b5b50; }
+    .tax-report-institutions a { overflow-wrap: anywhere; }
     @media screen and (max-width: 560px) {
       .tax-report-document .tax-report-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -329,7 +362,7 @@
     html { color-scheme: light; background: #f5f5ef; }
     body { margin: 0; font: 16px/1.5 system-ui, sans-serif; }
     main { max-width: 760px; padding: clamp(18px, 5vw, 42px); border: 1px solid #dce3e1; border-radius: 16px; margin: 18px auto; }
-    .print-actions { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+    .print-actions { display: flex; justify-content: flex-end; margin-top: 18px; }
     button { background: #0b5b50; border: 0; border-radius: 8px; color: #fff; cursor: pointer; padding: 9px 12px; font: 700 .82rem system-ui, sans-serif; }
     button:focus-visible { outline: 3px solid #127064; outline-offset: 3px; }
     ${contentStyles}
@@ -339,8 +372,8 @@
 </head>
 <body>
   <main class="tax-report-document">
-    <div class="print-actions"><button type="button" onclick="window.print()">Spausdinti arba išsaugoti PDF</button></div>
     ${reportContent(data, photos)}
+    <div class="print-actions"><button type="button" onclick="window.print()">Spausdinti arba išsaugoti PDF</button></div>
   </main>
   <script>
     let collapsedGroups = [];
@@ -358,22 +391,22 @@
   }
 
   function safeShareUrl(raw) {
+    const canonical = safeHttpsUrl(document.querySelector?.('link[rel="canonical"]')?.href);
+    if (canonical) return canonical.origin + canonical.pathname;
     const url = safeHttpsUrl(raw);
-    if (!url) return "";
-    const canonical = document.querySelector?.('link[rel="canonical"]')?.href;
-    return url.href === canonical ? url.origin + url.pathname : url.origin + "/";
+    return url ? url.origin + "/" : "";
   }
 
   function summaryText(data) {
     return [
       `${brand} · ${data.year} m.`,
+      preliminaryNotice,
       data.example ? "Pavyzdys pagal numatytąjį atlyginimą." : "",
       `Metiniai mokesčiai ir įmokos · ${data.total}`,
       resultCaveat(data),
       data.wageEquivalent ? "Bendra metinė mokesčių ir įmokų suma prilygsta " + data.wageEquivalent + " atlyginimo ant popieriaus." : "",
       ...data.rows.map(([label, amount]) => `${label} · ${amount}`),
-      data.yearContext || "Preliminarus skaičiavimas.",
-      safeShareUrl(data.url),
+      data.yearContext,
     ].filter(Boolean).join("\n");
   }
 
@@ -381,7 +414,7 @@
     const paragraph = (name, lines) => lines.length ? [name, ...lines].join("\n") : "";
     const caveat = resultCaveat(data);
     const comparison = data.comparison;
-    const spendingUrl = safeHttpsUrl(data.spendingSource?.url)?.href;
+    const sourceLines = (source) => source ? [source.source, safeHttpsUrl(source.url)?.href].filter(Boolean) : [];
     const spendingDetails = (data.spendingGroups ?? []).filter((group) => group.rows.length).map((group) => [
       `${group.name} · ${group.amount}`,
       ...group.rows.map(([label, amount, description]) => `  ${label} · ${amount}${description ? ` (${description})` : ""}`),
@@ -392,20 +425,31 @@
       return `${item.label} · ${item.quantity} (${context})` + (url ? "\n" + url.href : "");
     });
     return [
-      [brand, `${data.year} m. mokesčių ataskaita`, data.mode, data.yearContext].filter(Boolean).join("\n"),
+      [brand, `${data.year} m. mokesčių ataskaita`, preliminaryNotice, data.mode, data.yearContext].filter(Boolean).join("\n"),
       caveat ? "Skaičiavimo pastaba. " + caveat : "",
       comparisons.length ? paragraph("Perkamosios galios palyginimas", [comparisonBasis(data), `${comparison.basis} · ${comparison.total}`, ...comparisons]) : "",
-      `Metiniai mokesčiai ir įmokos · ${data.total}`,
-      paragraph("Mokesčiai ir draudimo įmokos", data.rows.map(([label, amount]) => `${label} · ${amount}`)),
+      paragraph(annualTaxHeading, [`Bendra suma · ${data.total}`, ...data.rows.map(([label, amount]) => `${label} · ${amount}`)]),
       paragraph("Metinės sumos pagal prekę ar paslaugą", (data.purchases ?? []).map((item) => [
         item.name, ...item.amounts.map(([label, amount]) => label + " · " + amount), item.taxes, item.note,
       ].filter(Boolean).join("\n"))),
       spendingDetails.length ? paragraph("Išlaidų papunkčiai", [
         spendingBasis(data.spendingYear),
+        data.spendingCoverage?.text,
+        ...sourceLines(data.spendingCoverage),
+        data.defenceBudgetContext?.text,
+        ...sourceLines(data.defenceBudgetContext),
+        ...sourceLines(data.defenceBudgetSource),
         ...spendingDetails,
-        data.spendingSource?.source,
-        spendingUrl,
+        ...sourceLines(data.spendingSource),
       ].filter(Boolean)) : "",
+      data.institutions?.rows.length ? paragraph(institutionHeading, [
+        institutionBasis(data.institutions),
+        ...data.institutions.rows.map((item) => [
+          `${item.name} · ${item.annual} per metus · ${item.monthly} per mėnesį`,
+          `Panaudota ${item.used}.`,
+          ...sourceLines(item),
+        ].join("\n")),
+      ]) : "",
       paragraph("Apie skaičiavimą", data.notes),
     ].filter(Boolean).join("\n\n");
   }
@@ -449,9 +493,11 @@
       .tax-export-share { margin-block: 12px; padding: 12px; border: 1px solid #cadfd6; border-radius: 10px; background: #f4faf7; }
       .tax-export-share h3 { margin: 0; font-size: .97rem; }
       .tax-export-share .tax-export-actions { margin-block: 9px 0; }
+      .tax-export-share .tax-export-help ~ .tax-export-help { margin-top: 12px; }
       .tax-export-share .tax-export-text[hidden] { display: none; }
       .tax-export-share input.tax-export-text { min-height: 0; }
-      .tax-export-dialog .tax-report-document { border-top: 1px solid #dce3e1; padding-top: 16px; margin-top: 10px; }
+      .tax-export-dialog .tax-report-document { margin-top: 10px; }
+      .tax-export-footer { border-top: 1px solid #dce3e1; padding-top: 12px; margin-top: 18px; }
       .tax-report-print-copy { display: none; }
       @media print {
         body.tax-export-printing > :not(.tax-report-print-copy) { display: none !important; }
@@ -560,6 +606,25 @@
     return { actions, status };
   }
 
+  function makeSummaryShare(field, status, label) {
+    if (typeof navigator.share !== "function") return null;
+    const share = makeButton(label);
+    share.addEventListener("click", async () => {
+      try {
+        await navigator.share({ title: brand, text: field.value });
+        status.textContent = "Suvestinė perduota įrenginio dalijimosi funkcijai.";
+      } catch (error) {
+        if (error?.name === "AbortError") {
+          status.textContent = "Dalijimasis atšauktas. Gali nukopijuoti suvestinę.";
+          return;
+        }
+        field.hidden = false;
+        status.textContent = "Gali nukopijuoti suvestinę iš teksto lauko.";
+      }
+    });
+    return share;
+  }
+
   function reportSharing(data) {
     const url = safeShareUrl(data.url);
     const section = document.createElement("section");
@@ -569,11 +634,7 @@
     heading.id = "tax-export-share-heading";
     heading.textContent = "Pasidalyti su draugu";
     const { actions, status } = makeActions();
-    const summary = selectableText(summaryText(data), "Mokesčių suvestinė dalijimuisi");
-    summary.hidden = true;
-    const copySummary = makeButton("Kopijuoti mokesčių suvestinę");
-    copySummary.addEventListener("click", () => copyText(summary, status, "Mokesčių suvestinė nukopijuota."));
-    section.append(heading, makeParagraph("Nuoroda atveria skaičiuoklę. Suvestinėje pateikiamos tavo metinės mokesčių sumos."));
+    section.append(heading);
     if (url) {
       const linkField = document.createElement("input");
       linkField.className = "tax-export-text";
@@ -584,17 +645,19 @@
       linkField.setAttribute("aria-label", "Skaičiuoklės nuoroda");
       const copyLink = makeButton("Kopijuoti skaičiuoklės nuorodą");
       copyLink.addEventListener("click", () => copyText(linkField, status, "Skaičiuoklės nuoroda nukopijuota."));
-      const facebook = document.createElement("a");
-      facebook.className = "secondary-button";
-      facebook.href = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url);
-      facebook.target = "_blank";
-      facebook.rel = "noopener noreferrer";
-      facebook.textContent = "Dalytis „Facebook“";
-      actions.append(copyLink, facebook);
-      section.append(linkField);
+      const linkActions = document.createElement("div");
+      linkActions.className = "tax-export-actions";
+      linkActions.append(copyLink, ...calculatorSocialPlatforms.map((platform) => makeCalculatorSocialLink(url, platform)));
+      section.append(makeParagraph("Nuoroda atveria skaičiuoklę."), linkActions, linkField);
     }
+    const summary = selectableText(summaryText(data), "Mokesčių suvestinė dalijimuisi");
+    summary.hidden = true;
+    const copySummary = makeButton("Kopijuoti mokesčių suvestinę");
+    copySummary.addEventListener("click", () => copyText(summary, status, "Mokesčių suvestinė nukopijuota."));
     actions.append(copySummary);
-    section.append(actions, summary, status);
+    const share = makeSummaryShare(summary, status, "Dalytis suvestine per įrenginį");
+    if (share) actions.append(share);
+    section.append(makeParagraph("Suvestinė yra tekstas su tavo metinėmis mokesčių sumomis."), actions, summary, status);
     return section;
   }
 
@@ -638,10 +701,13 @@
       document.body.classList.remove("tax-export-printing");
       file?.release();
     });
-    dialog.append(
-      makeParagraph("PDF failui pasirink „Spausdinti arba išsaugoti PDF“, tada spausdinimo lange pasirink PDF formatą."),
-      actions, status, reportSharing(data), copy, preview,
+    const footer = document.createElement("footer");
+    footer.className = "tax-export-footer";
+    footer.append(
+      makeParagraph("Norėdamas išsaugoti PDF, spausdinimo lange pasirink PDF formatą."),
+      actions, status, reportSharing(data), copy,
     );
+    dialog.append(preview, footer);
     document.body.append(printCopy);
     show();
     document.body.classList.add("tax-export-printing");
@@ -679,21 +745,8 @@
     copy.classList.add("tax-export-primary");
     copy.addEventListener("click", () => copyText(field, status));
     actions.append(copy);
-    const payload = { title: brand, text: field.value };
-    if (typeof navigator.share === "function") {
-      const share = makeButton("Dalytis per įrenginį");
-      share.addEventListener("click", async () => {
-        try {
-          await navigator.share(payload);
-          status.textContent = "Suvestinė perduota įrenginio dalijimosi funkcijai.";
-        } catch (error) {
-          status.textContent = error?.name === "AbortError"
-            ? "Dalijimasis atšauktas. Gali nukopijuoti suvestinę."
-            : "Gali nukopijuoti suvestinę iš teksto lauko.";
-        }
-      });
-      actions.append(share);
-    }
+    const share = makeSummaryShare(field, status, "Dalytis per įrenginį");
+    if (share) actions.append(share);
     dialog.append(
       makeParagraph("Suvestinėje pateikiamos metinės mokesčių sumos pagal jų rūšį. Tekstą gali pažymėti ir nukopijuoti."),
       field, actions, status,
